@@ -246,8 +246,13 @@ export function bookingsToCsv(
   ];
 
   const escape = (value: string | number | null) => {
-    const text = value === null || value === undefined ? "" : String(value);
-    return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    let text = value === null || value === undefined ? "" : String(value);
+    // Spreadsheets treat a leading =, +, - or @ as a formula, so a hiker could put
+    // one in their name or notes. Prefix a quote to keep it inert text.
+    if (/^[=+\-@\t\r]/.test(text)) {
+      text = `'${text}`;
+    }
+    return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
   };
 
   const rows = bookings.map((booking) =>

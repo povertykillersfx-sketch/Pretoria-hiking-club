@@ -81,10 +81,20 @@ function layout(title: string, body: string): string {
 </html>`;
 }
 
+// Hiker-supplied values (names, notes, enquiries) end up inside the email markup,
+// so everything interpolated into HTML goes through here first.
+function esc(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function detailRow(label: string, value: string): string {
   return `<tr>
     <td style="padding:10px 0;border-bottom:1px solid #ece5d8;color:#6f7a72;font-size:13px;">${label}</td>
-    <td style="padding:10px 0;border-bottom:1px solid #ece5d8;text-align:right;font-size:14px;font-weight:600;">${value}</td>
+    <td style="padding:10px 0;border-bottom:1px solid #ece5d8;text-align:right;font-size:14px;font-weight:600;">${esc(value)}</td>
   </tr>`;
 }
 
@@ -105,7 +115,7 @@ export async function sendBookingConfirmation(booking: BookingWithEvent): Promis
              ${site.bank.accountName}<br/>
              ${site.bank.bank} · Account ${site.bank.accountNumber}<br/>
              Branch code ${site.bank.branchCode}<br/>
-             <strong>Reference: ${booking.reference}</strong>
+             <strong>Reference: ${esc(booking.reference)}</strong>
            </p>
            <p style="margin:10px 0 0;font-size:12px;color:#6f7a72;">Please send proof of payment to ${site.email} at least 48 hours before the event.</p>
          </div>`
@@ -115,16 +125,16 @@ export async function sendBookingConfirmation(booking: BookingWithEvent): Promis
     .map(
       (item) =>
         `<tr>
-           <td style="padding:6px 12px 6px 0;font-size:13px;font-weight:700;color:#14512f;white-space:nowrap;">${item.time}</td>
-           <td style="padding:6px 0;font-size:13px;color:#3c4a42;">${item.title}</td>
+           <td style="padding:6px 12px 6px 0;font-size:13px;font-weight:700;color:#14512f;white-space:nowrap;">${esc(item.time)}</td>
+           <td style="padding:6px 0;font-size:13px;color:#3c4a42;">${esc(item.title)}</td>
          </tr>`,
     )
     .join("");
 
   const html = layout(
     "You're booked! 🥾",
-    `<p style="margin:0 0 20px;font-size:15px;line-height:1.7;">Hi ${booking.name.split(" ")[0]},</p>
-     <p style="margin:0 0 24px;font-size:15px;line-height:1.7;">Your spot on <strong>${event.title}</strong> is confirmed. Here are your details — save this email, you will need your reference on the day.</p>
+    `<p style="margin:0 0 20px;font-size:15px;line-height:1.7;">Hi ${esc(booking.name.split(" ")[0])},</p>
+     <p style="margin:0 0 24px;font-size:15px;line-height:1.7;">Your spot on <strong>${esc(event.title)}</strong> is confirmed. Here are your details — save this email, you will need your reference on the day.</p>
      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
        ${detailRow("Booking reference", booking.reference)}
        ${detailRow("Event", event.title)}
@@ -140,7 +150,7 @@ export async function sendBookingConfirmation(booking: BookingWithEvent): Promis
      ${eftBlock}
      <div style="margin-top:24px;padding:18px;border-radius:16px;background:#061a11;color:#ffffff;">
        <p style="margin:0;font-size:14px;font-weight:700;">⏰ Please arrive on time</p>
-       <p style="margin:6px 0 0;font-size:13px;line-height:1.6;color:#d9f0e2;">Late arrivals may not be accommodated once the hike has started. Be at ${event.meetingPoint} by ${event.arrivalTime}.</p>
+       <p style="margin:6px 0 0;font-size:13px;line-height:1.6;color:#d9f0e2;">Late arrivals may not be accommodated once the hike has started. Be at ${esc(event.meetingPoint)} by ${esc(event.arrivalTime)}.</p>
      </div>
      <p style="margin:24px 0 10px;font-size:14px;font-weight:700;">Programme for the day</p>
      <table role="presentation" cellpadding="0" cellspacing="0">${scheduleRows}</table>
@@ -213,11 +223,11 @@ export async function sendContactMessage(input: {
 }): Promise<void> {
   await deliver({
     to: process.env.ADMIN_EMAIL ?? site.email,
-    subject: `Website enquiry from ${input.name}`,
+    subject: `Website enquiry from ${input.name.replace(/[\r\n]+/g, " ")}`,
     html: layout(
       "New website enquiry",
-      `<p style="margin:0 0 12px;font-size:14px;"><strong>${input.name}</strong> &lt;${input.email}&gt;</p>
-       <p style="margin:0;font-size:15px;line-height:1.7;white-space:pre-wrap;">${input.message.replace(/</g, "&lt;")}</p>`,
+      `<p style="margin:0 0 12px;font-size:14px;"><strong>${esc(input.name)}</strong> &lt;${esc(input.email)}&gt;</p>
+       <p style="margin:0;font-size:15px;line-height:1.7;white-space:pre-wrap;">${esc(input.message)}</p>`,
     ),
     text: `${input.name} <${input.email}>\n\n${input.message}`,
   });
