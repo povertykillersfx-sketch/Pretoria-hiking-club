@@ -28,10 +28,6 @@ export function SiteHeader() {
   }, []);
 
   useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
@@ -78,15 +74,12 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/book"
-            className={cn(
-              buttonClasses(solid ? "primary" : "light", "sm", "hidden sm:inline-flex"),
-            )}
-          >
-            Book Your Spot
-            <ArrowIcon />
-          </Link>
+          <span className="hidden sm:block">
+            <Link href="/book" className={buttonClasses(solid ? "primary" : "light", "sm")}>
+              Book Your Spot
+              <ArrowIcon />
+            </Link>
+          </span>
 
           <button
             type="button"
@@ -136,12 +129,17 @@ export function SiteHeader() {
             <Link
               key={link.href}
               href={link.href}
+              onClick={() => setOpen(false)}
               className="rounded-2xl px-4 py-3.5 font-display text-xl font-bold tracking-tight text-forest-900 transition-colors hover:bg-forest-900/5"
             >
               {link.label}
             </Link>
           ))}
-          <Link href="/book" className={buttonClasses("primary", "lg", "mt-3 w-full")}>
+          <Link
+            href="/book"
+            onClick={() => setOpen(false)}
+            className={buttonClasses("primary", "lg", "mt-3 w-full")}
+          >
             Book Your Spot
             <ArrowIcon />
           </Link>

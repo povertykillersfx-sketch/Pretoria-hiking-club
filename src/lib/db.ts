@@ -10,7 +10,6 @@ const DATA_DIR = process.env.PHC_DATA_DIR
 const DB_PATH = path.join(DATA_DIR, "pretoria-hiking-club.db");
 
 declare global {
-  // eslint-disable-next-line no-var
   var __phcDb: Database.Database | undefined;
 }
 
@@ -19,6 +18,7 @@ function createConnection(): Database.Database {
   const connection = new Database(DB_PATH);
   connection.pragma("journal_mode = WAL");
   connection.pragma("foreign_keys = ON");
+  connection.pragma("busy_timeout = 5000");
   migrate(connection);
   seed(connection);
   return connection;

@@ -145,7 +145,9 @@ export function createBooking(input: CreateBookingInput): BookingWithEvent {
       .get(Number(info.lastInsertRowid))!;
   });
 
-  const row = run(input);
+  // An immediate transaction takes the write lock before the capacity check, so
+  // two people booking the last spots at the same time can never oversell it.
+  const row = run.immediate(input);
   const event = getEventById(row.event_id)!;
 
   return { ...mapBooking(row), event };

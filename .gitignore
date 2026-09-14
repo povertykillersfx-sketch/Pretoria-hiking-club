@@ -46,3 +46,6 @@ next-env.d.ts
 # Next.js agent rule files
 AGENTS.md
 CLAUDE.md
+
+# Admin photo uploads
+/public/uploads

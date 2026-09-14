@@ -79,6 +79,7 @@ export function GalleryGrid({ images = galleryImages }: { images?: GalleryImage[
               alt={image.alt}
               width={800}
               height={index % 3 === 1 ? 1000 : 600}
+              priority={index < 4}
               sizes="(max-width: 640px) 46vw, (max-width: 1024px) 45vw, 30vw"
               className="h-auto w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-105"
             />

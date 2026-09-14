@@ -6,6 +6,7 @@ import { EventCard } from "@/components/event-card";
 import { JsonLd } from "@/components/json-ld";
 import { Reveal } from "@/components/reveal";
 import { ArriveOnTimeNotice, ScheduleTimeline } from "@/components/schedule-timeline";
+import { StickyBookBar } from "@/components/sticky-book-bar";
 import { ArrowIcon, buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { getEventBySlug, getUpcomingEvents } from "@/lib/events";
@@ -72,7 +73,7 @@ export default async function EventPage({
 
   if (!event || !event.published) notFound();
 
-  const { day, month, year } = dateParts(event.date);
+  const { day, month } = dateParts(event.date);
   const others = getUpcomingEvents()
     .filter((item) => item.id !== event.id)
     .slice(0, 3);
@@ -107,8 +108,9 @@ export default async function EventPage({
   };
 
   return (
-    <>
+    <div className="pb-20 lg:pb-0">
       <JsonLd data={jsonLd} />
+      <StickyBookBar event={event} />
 
       <section className="relative isolate flex min-h-[70svh] flex-col justify-end overflow-hidden bg-forest-950 px-5 pb-12 pt-32 sm:px-8 sm:pb-16 sm:pt-40 lg:px-10">
         <div className="absolute inset-0 -z-10">
@@ -165,9 +167,7 @@ export default async function EventPage({
                 <span className="font-display text-xl font-extrabold leading-none">{day}</span>
                 <span className="text-[0.6rem] font-bold tracking-[0.14em]">{month}</span>
               </span>
-              <span className="text-sm sm:text-base">
-                {formatDate(event.date)} · {year}
-              </span>
+              <span className="text-sm sm:text-base">{formatDate(event.date)}</span>
             </span>
             <span className="text-sm sm:text-base">📍 {event.location}</span>
             <span className="text-sm sm:text-base">🕖 Arrive {event.arrivalTime} · starts {event.startTime}</span>
@@ -407,6 +407,6 @@ export default async function EventPage({
           </div>
         </section>
       )}
-    </>
+    </div>
   );
 }

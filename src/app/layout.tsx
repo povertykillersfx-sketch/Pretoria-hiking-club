@@ -68,14 +68,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en-ZA" className={`${display.variable} ${body.variable} h-full antialiased`}>
+    <html
+      lang="en-ZA"
+      data-scroll-behavior="smooth"
+      className={`${display.variable} ${body.variable} h-full antialiased`}
+    >
       <head>
-        <script
-          // Scroll-reveal animations only apply when JavaScript can un-hide them.
-          dangerouslySetInnerHTML={{
-            __html: "document.documentElement.classList.add('js')",
-          }}
-        />
+        <noscript>
+          {/* Scroll-reveal animations need JS to un-hide content, so opt out entirely without it. */}
+          <style>{".reveal,.fade-up{opacity:1!important;transform:none!important;animation:none!important}"}</style>
+        </noscript>
       </head>
       <body className="flex min-h-full flex-col bg-bone text-ink">{children}</body>
     </html>

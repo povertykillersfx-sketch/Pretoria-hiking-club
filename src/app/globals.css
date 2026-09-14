@@ -97,8 +97,8 @@ body {
   animation: fadeUp 0.95s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Scroll reveal — content stays visible when JavaScript is unavailable. ---- */
-html.js .reveal {
+/* Scroll reveal — a <noscript> override keeps content visible without JS. -- */
+.reveal {
   opacity: 0;
   transform: translateY(28px);
   transition:
@@ -107,7 +107,7 @@ html.js .reveal {
   will-change: opacity, transform;
 }
 
-html.js .reveal.is-visible {
+.reveal.is-visible {
   opacity: 1;
   transform: none;
 }
@@ -117,7 +117,7 @@ html.js .reveal.is-visible {
     scroll-behavior: auto;
   }
 
-  html.js .reveal {
+  .reveal {
     opacity: 1;
     transform: none;
     transition: none;

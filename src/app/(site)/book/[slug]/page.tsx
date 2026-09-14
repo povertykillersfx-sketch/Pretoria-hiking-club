@@ -96,6 +96,7 @@ export default async function BookEventPage({
                   src={event.image}
                   alt={event.title}
                   fill
+                  priority
                   sizes="(max-width: 1024px) 92vw, 30rem"
                   className="object-cover"
                 />
