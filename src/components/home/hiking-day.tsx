@@ -26,7 +26,7 @@ export function HikingDay() {
             <Reveal className="relative aspect-4/5 overflow-hidden rounded-4xl sm:aspect-3/4 lg:aspect-4/5">
               <Image
                 src="/images/hero-trail.jpg"
-                alt="Hikers walking a mountain trail early in the morning"
+                alt="Club members hiking single file through the bushveld"
                 fill
                 sizes="(max-width: 1024px) 92vw, 40vw"
                 className="object-cover"

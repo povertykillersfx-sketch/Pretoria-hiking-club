@@ -19,7 +19,7 @@ export default function GalleryPage() {
         title="Every trail tells a story"
         description="Group hikes, mountain trails, nature, camping, team photos, getaways, social activities and scenic views from across South Africa."
         image="/images/gallery-peaks.jpg"
-        imageAlt="Mountain peaks at sunrise"
+        imageAlt="Hikers on a ridge after a colour-run hike"
         compact
       />
 

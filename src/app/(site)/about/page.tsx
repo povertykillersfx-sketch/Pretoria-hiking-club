@@ -43,7 +43,7 @@ export default function AboutPage() {
         title="A community built on trails, fires and friendships"
         description="What started as a few friends looking for a reason to get outside on a Saturday is now 1,000+ hikers strong — and still growing every month."
         image="/images/gallery-golden-hour.jpg"
-        imageAlt="Group of club members standing together in golden light"
+        imageAlt="A Pretoria Hiking Club member holding a welcome photo frame"
       />
 
       <section className="bg-bone py-16 sm:py-24">
@@ -100,7 +100,7 @@ export default function AboutPage() {
               <Reveal className="aspect-4/5 overflow-hidden rounded-4xl sm:mt-10">
                 <Image
                   src="/images/hero-group-hike.jpg"
-                  alt="Club members on a mountain trail"
+                  alt="Club members walking a grassy trail"
                   width={900}
                   height={1125}
                   className="h-full w-full object-cover"
@@ -109,7 +109,7 @@ export default function AboutPage() {
               <Reveal delay={120} className="aspect-4/5 overflow-hidden rounded-4xl">
                 <Image
                   src="/images/gallery-campfire.jpg"
-                  alt="Campfire social at a club camping weekend"
+                  alt="Members sitting together at a club camping weekend"
                   width={900}
                   height={1125}
                   className="h-full w-full object-cover"
@@ -118,7 +118,7 @@ export default function AboutPage() {
               <Reveal delay={60} className="aspect-4/5 overflow-hidden rounded-4xl sm:mt-10">
                 <Image
                   src="/images/gallery-suspension-bridge.jpg"
-                  alt="Hiker crossing a suspension bridge"
+                  alt="The crew in One Movement Different Locations shirts"
                   width={900}
                   height={1125}
                   className="h-full w-full object-cover"
@@ -127,7 +127,7 @@ export default function AboutPage() {
               <Reveal delay={180} className="aspect-4/5 overflow-hidden rounded-4xl">
                 <Image
                   src="/images/gallery-long-table.jpg"
-                  alt="Club members at a long table social dinner"
+                  alt="A member holding a Pretoria Hiking Club welcome frame"
                   width={900}
                   height={1125}
                   className="h-full w-full object-cover"

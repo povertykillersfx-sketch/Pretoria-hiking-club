@@ -171,6 +171,15 @@ pip install pillow numpy scipy potracer
 python3 brand-source/trace-logo.py   # writes /tmp/brand.json, then re-emit assets
 ```
 
+Club photography lives in `brand-source/club-photos/`. `brand-source/replace-photos.py`
+crops those portraits into the landscape, portrait and square files the site
+uses under `public/images/`. Existing filenames are kept so event, gallery and
+page references do not have to change.
+
+```bash
+python3 brand-source/replace-photos.py
+```
+
 ## SEO and performance
 
 - Per-page metadata, Open Graph and Twitter cards

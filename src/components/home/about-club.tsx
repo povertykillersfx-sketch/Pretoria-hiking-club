@@ -65,7 +65,7 @@ export function AboutClub() {
             <Reveal className="col-span-2 aspect-16/10 overflow-hidden rounded-4xl">
               <Image
                 src="/images/gallery-friends-sunset.jpg"
-                alt="Club members sitting together watching the sunset after a hike"
+                alt="Members posing in a Pretoria Hiking Club hike-completed photo frame"
                 width={1400}
                 height={875}
                 className="h-full w-full object-cover"
@@ -74,7 +74,7 @@ export function AboutClub() {
             <Reveal delay={100} className="aspect-4/5 overflow-hidden rounded-4xl">
               <Image
                 src="/images/gallery-campfire.jpg"
-                alt="Members around a campfire at a club camping weekend"
+                alt="Two members sitting by a tent at a club camping weekend"
                 width={900}
                 height={1125}
                 className="h-full w-full object-cover"
@@ -83,7 +83,7 @@ export function AboutClub() {
             <Reveal delay={180} className="aspect-4/5 overflow-hidden rounded-4xl">
               <Image
                 src="/images/gallery-sunset-rock.jpg"
-                alt="Hikers watching the sunset from a rocky viewpoint"
+                alt="Hikers covered in colour powder on a rocky hillside"
                 width={900}
                 height={1125}
                 className="h-full w-full object-cover"
