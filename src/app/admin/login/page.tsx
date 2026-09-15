@@ -11,7 +11,7 @@ export default async function AdminLoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center px-5 py-16">
       <div className="w-full max-w-md rounded-4xl border border-white/10 bg-white/5 p-8 backdrop-blur sm:p-10">
-        <LogoMark className="h-11 w-11 text-forest-300" />
+        <LogoMark tone="light" className="h-14" />
         <h1 className="display mt-6 text-3xl text-white">Club admin</h1>
         <p className="mt-3 text-sm text-white/60">
           Sign in to manage events, capacity and attendee lists.

@@ -43,13 +43,20 @@ export const metadata: Metadata = {
     siteName: site.name,
     title: `${site.name} · ${site.tagline}`,
     description: site.description,
-    images: [{ url: "/images/hero-group-hike.jpg", width: 1200, height: 630, alt: site.name }],
+    images: [
+      {
+        url: "/brand/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: `${site.name} — ${site.slogan}`,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: `${site.name} · ${site.tagline}`,
     description: site.description,
-    images: ["/images/hero-group-hike.jpg"],
+    images: ["/brand/og-image.jpg"],
   },
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },

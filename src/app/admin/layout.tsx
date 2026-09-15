@@ -28,7 +28,7 @@ export default async function AdminLayout({
         <header className="sticky top-0 z-40 border-b border-white/10 bg-forest-950/95 backdrop-blur">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-5 py-4 sm:px-8">
             <Link href="/admin" className="flex items-center gap-2.5 text-white">
-              <LogoMark className="h-8 w-8" />
+              <LogoMark tone="light" className="h-9" />
               <span className="font-display text-base font-extrabold tracking-tight">
                 PHC Admin
               </span>

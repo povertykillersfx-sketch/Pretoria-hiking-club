@@ -2,6 +2,7 @@ export const site = {
   name: "Pretoria Hiking Club",
   shortName: "PHC",
   tagline: "Hike. Connect. Explore.",
+  slogan: "One Movement, Different Locations",
   description:
     "Join 1,000+ hikers exploring some of South Africa's best trails and outdoor experiences. Monthly 5KM and 10KM hikes, camping adventures and getaway weekends from Pretoria.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://pretoriahikingclub.co.za",

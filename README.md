@@ -142,6 +142,35 @@ src/
 public/images/         curated outdoor photography
 ```
 
+## Branding
+
+The club's logo artwork lives in `brand-source/logo-original.png`. It is a flat
+two-colour lockup: brand green (`#00BF63`) scenery with a white overlay for the
+hiker, mountain outlines and sparkles.
+
+`brand-source/trace-logo.py` vectorises it, because the supplied file is only
+500px and the mark needs to stay sharp at every size. It drops the "PRETORIA
+HIKING CLUB" lettering (the site sets that as live text) and writes:
+
+| Output | Used for |
+| --- | --- |
+| `public/brand/mark-on-dark.svg` | the mark over dark backgrounds |
+| `public/brand/mark-on-light.svg` | the same mark with an ink overlay, for pale backgrounds |
+| `src/app/icon.svg`, `favicon.ico`, `apple-icon.png` | tab and home-screen icons |
+| `public/brand/icon-*.png` | Android install icons, including a maskable one |
+| `public/brand/og-image.jpg` | the WhatsApp / Instagram / X share card |
+
+`LogoMark` renders both mark variants and cross-fades between them, so the
+header can flip tone on scroll without the swap ever flashing. Keeping the mark
+in `/public` rather than inline saves ~16KB of gzipped HTML on every page.
+
+To regenerate after new artwork lands:
+
+```bash
+pip install pillow numpy scipy potracer
+python3 brand-source/trace-logo.py   # writes /tmp/brand.json, then re-emit assets
+```
+
 ## SEO and performance
 
 - Per-page metadata, Open Graph and Twitter cards
