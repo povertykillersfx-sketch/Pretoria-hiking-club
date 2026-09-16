@@ -134,7 +134,7 @@ export async function sendBookingConfirmation(booking: BookingWithEvent): Promis
   const html = layout(
     "You're booked! 🥾",
     `<p style="margin:0 0 20px;font-size:15px;line-height:1.7;">Hi ${esc(booking.name.split(" ")[0])},</p>
-     <p style="margin:0 0 24px;font-size:15px;line-height:1.7;">Your spot on <strong>${esc(event.title)}</strong> is confirmed. Here are your details — save this email, you will need your reference on the day.</p>
+     <p style="margin:0 0 24px;font-size:15px;line-height:1.7;">Your spot on <strong>${esc(event.title)}</strong> is confirmed. Save this email — you will need your QR code at check-in on the day.</p>
      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
        ${detailRow("Booking reference", booking.reference)}
        ${detailRow("Event", event.title)}
@@ -156,7 +156,10 @@ export async function sendBookingConfirmation(booking: BookingWithEvent): Promis
      <table role="presentation" cellpadding="0" cellspacing="0">${scheduleRows}</table>
      <p style="margin:26px 0 0;font-size:15px;line-height:1.7;">See you on the trail!<br/><strong>The ${site.name} crew</strong></p>
      <p style="margin:18px 0 0;">
-       <a href="${site.url}/events/${event.slug}" style="display:inline-block;background:#14512f;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:700;font-size:14px;">View event details</a>
+       <a href="${site.url}/booking/${esc(booking.reference)}" style="display:inline-block;background:#14512f;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:700;font-size:14px;">Show my check-in QR</a>
+     </p>
+     <p style="margin:14px 0 0;">
+       <a href="${site.url}/events/${event.slug}" style="color:#14512f;font-size:14px;">View event details</a>
      </p>`,
   );
 
@@ -176,6 +179,8 @@ export async function sendBookingConfirmation(booking: BookingWithEvent): Promis
     ``,
     `PLEASE ARRIVE ON TIME — late arrivals may not be accommodated once the hike has started.`,
     ``,
+    `Show your check-in QR: ${site.url}/booking/${booking.reference}`,
+    `Lost the email? ${site.url}/ticket`,
     `${site.url}/events/${event.slug}`,
   ].join("\n");
 

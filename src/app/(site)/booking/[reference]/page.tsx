@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArriveOnTimeNotice, ScheduleTimeline } from "@/components/schedule-timeline";
+import { TicketQr } from "@/components/booking/ticket-qr";
 import { ArrowIcon, buttonClasses } from "@/components/ui/button";
 import { getBookingByReference } from "@/lib/bookings";
 import { formatDate, formatPriceExact, trailLabel } from "@/lib/format";
@@ -105,6 +106,22 @@ export default async function BookingConfirmationPage({
               ))}
             </dl>
 
+            {booking.status === "cancelled" ? (
+              <div className="mt-6 rounded-4xl border border-ember/40 bg-ember/10 p-6">
+                <h3 className="font-display text-lg font-bold tracking-tight text-forest-950">
+                  This booking was cancelled
+                </h3>
+                <p className="mt-2 text-sm text-forest-900/70">
+                  The QR code is no longer valid. Email {site.email} if you think
+                  this is a mistake.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-6 lg:hidden">
+                <TicketQr token={booking.checkinToken} reference={booking.reference} />
+              </div>
+            )}
+
             {booking.paymentStatus === "pending" && (
               <div className="mt-6 rounded-4xl border border-ember/40 bg-ember/10 p-6">
                 <h3 className="font-display text-lg font-bold tracking-tight text-forest-950">
@@ -159,6 +176,11 @@ export default async function BookingConfirmationPage({
           </div>
 
           <aside className="space-y-6 lg:sticky lg:top-28 lg:self-start">
+            {booking.status !== "cancelled" && booking.checkinToken ? (
+              <div className="hidden lg:block">
+                <TicketQr token={booking.checkinToken} reference={booking.reference} />
+              </div>
+            ) : null}
             <div className="overflow-hidden rounded-4xl border border-forest-900/10 bg-white">
               <div className="relative aspect-4/3">
                 <Image
@@ -187,7 +209,7 @@ export default async function BookingConfirmationPage({
                   <li className="flex gap-3">
                     <span className="font-bold text-forest-600">3.</span>
                     Arrive at {event.meetingPoint} by {event.arrivalTime} and
-                    check in with your reference.
+                    check in with your QR code.
                   </li>
                 </ol>
               </div>

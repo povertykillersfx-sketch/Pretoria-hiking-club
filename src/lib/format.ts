@@ -22,6 +22,18 @@ export function formatShortDate(iso: string): string {
   return shortDateFormatter.format(new Date(`${iso}T12:00:00Z`));
 }
 
+export function formatDateTime(value: string): string {
+  const iso = value.includes("T") ? value : value.replace(" ", "T");
+  const withZone = /Z$|[+-]\d{2}:\d{2}$/.test(iso) ? iso : `${iso}Z`;
+  return new Intl.DateTimeFormat("en-ZA", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Africa/Johannesburg",
+  }).format(new Date(withZone));
+}
+
 export function dateParts(iso: string): { day: string; month: string; year: string } {
   const date = new Date(`${iso}T12:00:00Z`);
   return {

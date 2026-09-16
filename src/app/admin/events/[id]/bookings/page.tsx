@@ -2,9 +2,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { cancelBookingAction, markBookingPaidAction } from "@/app/actions/admin";
 import { isAuthenticated } from "@/lib/auth";
-import { getBookingsForEvent } from "@/lib/bookings";
+import { getBookingsForEvent, getCheckInStats } from "@/lib/bookings";
 import { getEventById } from "@/lib/events";
-import { formatDate, formatPriceExact } from "@/lib/format";
+import { formatDate, formatDateTime, formatPriceExact } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +21,7 @@ export default async function EventBookingsPage({
   if (!event) notFound();
 
   const bookings = getBookingsForEvent(event.id);
+  const stats = getCheckInStats(event.id);
   const confirmed = bookings.filter((booking) => booking.status === "confirmed");
   const outstanding = confirmed.filter((booking) => booking.paymentStatus === "pending");
   const fiveKm = confirmed
@@ -47,9 +48,15 @@ export default async function EventBookingsPage({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/admin/check-in/${event.id}`}
+            className="rounded-full bg-forest-500 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-forest-400"
+          >
+            Check-in desk
+          </Link>
           <a
             href={`/api/admin/events/${event.id}/export`}
-            className="rounded-full bg-forest-500 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-forest-400"
+            className="rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white hover:text-forest-950"
           >
             Export attendees (CSV)
           </a>
@@ -62,13 +69,17 @@ export default async function EventBookingsPage({
         </div>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         {[
           { label: "Booked", value: `${event.spotsBooked}/${event.capacity}` },
           { label: "Remaining", value: String(event.spotsRemaining) },
           { label: "5KM hikers", value: String(fiveKm) },
           { label: "10KM hikers", value: String(tenKm) },
           { label: "Awaiting EFT", value: String(outstanding.length) },
+          {
+            label: "Checked in",
+            value: `${stats.checkedInBookings}/${stats.confirmed}`,
+          },
         ].map((stat) => (
           <div key={stat.label} className="rounded-3xl border border-white/10 bg-white/5 p-5">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-forest-300">
@@ -91,6 +102,7 @@ export default async function EventBookingsPage({
               <th className="px-5 py-3.5 font-semibold">Spots</th>
               <th className="px-5 py-3.5 font-semibold">Amount</th>
               <th className="px-5 py-3.5 font-semibold">Status</th>
+              <th className="px-5 py-3.5 font-semibold">Checked in</th>
               <th className="px-5 py-3.5" />
             </tr>
           </thead>
@@ -128,6 +140,15 @@ export default async function EventBookingsPage({
                   )}
                 </td>
                 <td className="px-5 py-4">
+                  {booking.status === "cancelled" ? (
+                    <span className="text-white/35">—</span>
+                  ) : booking.checkedInAt ? (
+                    <span className="text-forest-300">{formatDateTime(booking.checkedInAt)}</span>
+                  ) : (
+                    <span className="text-white/45">Not yet</span>
+                  )}
+                </td>
+                <td className="px-5 py-4">
                   <div className="flex flex-wrap justify-end gap-2">
                     {booking.paymentStatus === "pending" && booking.status === "confirmed" && (
                       <form action={markBookingPaidAction}>
@@ -162,7 +183,7 @@ export default async function EventBookingsPage({
             ))}
             {bookings.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-5 py-10 text-center text-white/50">
+                <td colSpan={8} className="px-5 py-10 text-center text-white/50">
                   No bookings for this event yet.
                 </td>
               </tr>

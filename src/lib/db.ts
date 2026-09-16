@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { randomBytes } from "node:crypto";
 import Database from "better-sqlite3";
 import { seedEvents } from "./seed-data";
 
@@ -70,12 +71,55 @@ function migrate(connection: Database.Database) {
       payment_status TEXT NOT NULL DEFAULT 'not_required',
       status TEXT NOT NULL DEFAULT 'confirmed',
       notes TEXT,
+      checkin_token TEXT,
+      checked_in_at TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
     CREATE INDEX IF NOT EXISTS idx_bookings_event ON bookings(event_id);
     CREATE INDEX IF NOT EXISTS idx_events_date ON events(event_date);
   `);
+
+  const bookingColumns = connection
+    .prepare<[], { name: string }>("PRAGMA table_info(bookings)")
+    .all()
+    .map((column) => column.name);
+
+  if (!bookingColumns.includes("checkin_token")) {
+    connection.exec("ALTER TABLE bookings ADD COLUMN checkin_token TEXT");
+  }
+  if (!bookingColumns.includes("checked_in_at")) {
+    connection.exec("ALTER TABLE bookings ADD COLUMN checked_in_at TEXT");
+  }
+
+  connection.exec(
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_bookings_checkin_token ON bookings(checkin_token) WHERE checkin_token IS NOT NULL",
+  );
+
+  const missingTokens = connection
+    .prepare<[], { id: number }>(
+      "SELECT id FROM bookings WHERE checkin_token IS NULL OR checkin_token = ''",
+    )
+    .all();
+
+  if (missingTokens.length > 0) {
+    const assign = connection.prepare("UPDATE bookings SET checkin_token = ? WHERE id = ?");
+    const used = new Set(
+      connection
+        .prepare<[], { checkin_token: string }>(
+          "SELECT checkin_token FROM bookings WHERE checkin_token IS NOT NULL AND checkin_token != ''",
+        )
+        .all()
+        .map((row) => row.checkin_token),
+    );
+
+    for (const row of missingTokens) {
+      let token = randomBytes(16).toString("hex");
+      while (used.has(token)) token = randomBytes(16).toString("hex");
+      used.add(token);
+      assign.run(token, row.id);
+    }
+  }
 }
 
 function seed(connection: Database.Database) {
@@ -102,10 +146,10 @@ function seed(connection: Database.Database) {
   const insertBooking = connection.prepare(`
     INSERT INTO bookings (
       reference, event_id, distance, name, email, phone, people,
-      amount_cents, payment_method, payment_status, status
+      amount_cents, payment_method, payment_status, status, checkin_token
     ) VALUES (
       @reference, @event_id, @distance, @name, @email, @phone, @people,
-      @amount_cents, @payment_method, @payment_status, 'confirmed'
+      @amount_cents, @payment_method, @payment_status, 'confirmed', @checkin_token
     )
   `);
 
@@ -121,6 +165,7 @@ function seed(connection: Database.Database) {
           payment_method: event.row.price_cents > 0 ? booking.payment_method : "free",
           payment_status:
             event.row.price_cents > 0 ? booking.payment_status : "not_required",
+          checkin_token: randomBytes(16).toString("hex"),
         });
       }
     }

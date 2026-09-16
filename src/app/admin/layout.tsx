@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 const navigation = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/events", label: "Events" },
+  { href: "/admin/check-in", label: "Check-in" },
   { href: "/admin/events/new", label: "New event" },
 ];
 

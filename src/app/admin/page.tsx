@@ -118,12 +118,20 @@ export default async function AdminDashboardPage() {
                           : "Open"}
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <Link
-                      href={`/admin/events/${event.id}/bookings`}
-                      className="font-semibold text-forest-300 underline underline-offset-4"
-                    >
-                      Attendees
-                    </Link>
+                    <div className="flex flex-wrap justify-end gap-3">
+                      <Link
+                        href={`/admin/check-in/${event.id}`}
+                        className="font-semibold text-forest-300 underline underline-offset-4"
+                      >
+                        Check-in
+                      </Link>
+                      <Link
+                        href={`/admin/events/${event.id}/bookings`}
+                        className="font-semibold text-forest-300 underline underline-offset-4"
+                      >
+                        Attendees
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}

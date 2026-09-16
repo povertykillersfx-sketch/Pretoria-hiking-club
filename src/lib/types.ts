@@ -67,6 +67,8 @@ export type Booking = {
   status: BookingStatus;
   notes: string | null;
   createdAt: string;
+  checkinToken: string;
+  checkedInAt: string | null;
 };
 
 export type BookingWithEvent = Booking & {

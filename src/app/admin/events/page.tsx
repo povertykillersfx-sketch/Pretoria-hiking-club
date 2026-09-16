@@ -108,6 +108,12 @@ export default async function AdminEventsPage({
                 Edit
               </Link>
               <Link
+                href={`/admin/check-in/${event.id}`}
+                className="rounded-full bg-forest-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-forest-400"
+              >
+                Check-in
+              </Link>
+              <Link
                 href={`/admin/events/${event.id}/bookings`}
                 className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white hover:text-forest-950"
               >

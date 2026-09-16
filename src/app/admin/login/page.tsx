@@ -14,7 +14,7 @@ export default async function AdminLoginPage() {
         <LogoMark tone="light" className="h-14" />
         <h1 className="display mt-6 text-3xl text-white">Club admin</h1>
         <p className="mt-3 text-sm text-white/60">
-          Sign in to manage events, capacity and attendee lists.
+          Sign in to manage events, check hikers in, and view attendee lists.
         </p>
 
         <LoginForm />

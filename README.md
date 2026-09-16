@@ -17,9 +17,12 @@ administrator manages events, capacity and attendees from a built-in admin area.
 - Dedicated event pages with their own programme, what's included, what to
   bring, gallery and a sticky booking card (plus a mobile booking bar)
 - Four-step booking flow: trail distance → details → payment → confirmation
-- Confirmation page with booking reference, EFT instructions, calendar download
-  (`.ics`) and WhatsApp sharing
-- Automatic confirmation email to the hiker and a notification to the club
+- Confirmation page with booking reference, check-in QR (view and download),
+  EFT instructions, calendar download (`.ics`) and WhatsApp sharing
+- Find-my-ticket page (`/ticket`) so hikers can pull up their QR with the
+  booking reference and the email they booked with
+- Automatic confirmation email to the hiker (with a link to the check-in QR)
+  and a notification to the club
 - About, gallery, contact (with FAQ) and terms / cancellation / privacy pages
 
 **For the club administrator** (`/admin`)
@@ -31,9 +34,11 @@ administrator manages events, capacity and attendees from a built-in admin area.
   photos, per-event schedule, what's included and what to bring
 - Photo uploads straight from the event form, plus a picker for existing photos
 - Publish / unpublish, close / reopen bookings, delete events
-- Attendee list per event with trail split, outstanding EFT payments, mark-paid
-  and cancel actions
-- CSV export of attendees for an event
+- Attendee list per event with trail split, outstanding EFT payments, check-in
+  status, mark-paid and cancel actions
+- Trailhead QR check-in: pick a hike, scan unique booking codes with the phone
+  camera, or search by name / booking ID when a phone will not display the QR
+- CSV export of attendees for an event (includes checked-in time)
 
 **Booking rules that are enforced server-side**
 
@@ -42,7 +47,12 @@ administrator manages events, capacity and attendees from a built-in admin area.
 - When an event fills up, "Book Your Spot" is automatically replaced with
   "Sold Out" everywhere (cards, event page, sticky bar, booking page)
 - Past events, unpublished events and manually closed events refuse bookings
-- Trail distances that an event does not offer are rejected
+- Each confirmed booking gets a unique check-in token. The QR is valid only for
+  that booking and that hike — a code from a previous event is rejected as
+  invalid for this event
+- Cancelled bookings and tickets that have already been scanned cannot be
+  checked in again
+- Only signed-in club staff can open the check-in desk or mark someone as arrived
 
 ## Tech
 
@@ -121,7 +131,8 @@ Two tables, created and migrated on boot in `src/lib/db.ts`:
   photo, gallery, per-event schedule, includes, bring, published and
   bookings-closed flags
 - `bookings` — reference, event, trail distance, name, email, phone, number of
-  people, amount (cents), payment method and status, booking status and notes
+  people, amount (cents), payment method and status, booking status, notes,
+  unique check-in token and checked-in timestamp
 
 Spots remaining is always derived from confirmed bookings
 (`capacity − SUM(people)`), so cancellations return spots to the pool
@@ -132,11 +143,11 @@ automatically.
 ```
 src/
   app/
-    (site)/            public pages: home, events, book, booking, about,
+    (site)/            public pages: home, events, book, booking, ticket, about,
                        gallery, contact, legal
-    admin/             login, dashboard, event CRUD, attendee lists
-    actions/           server actions for bookings, contact and admin
-    api/               CSV export, photo upload, calendar (.ics)
+    admin/             login, dashboard, event CRUD, attendee lists, QR check-in
+    actions/           server actions for bookings, contact, check-in and admin
+    api/               CSV export, photo upload, calendar (.ics), QR download
   components/          UI, homepage sections, booking form, admin form
   lib/                 db, events, bookings, email, auth, formatting, site config
 public/images/         curated outdoor photography

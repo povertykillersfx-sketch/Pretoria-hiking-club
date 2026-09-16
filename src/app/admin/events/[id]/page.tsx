@@ -37,12 +37,20 @@ export default async function EditEventPage({
             {event.spotsRemaining} remaining
           </p>
         </div>
-        <Link
-          href={`/admin/events/${event.id}/bookings`}
-          className="rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white hover:text-forest-950"
-        >
-          View attendees
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/admin/check-in/${event.id}`}
+            className="rounded-full bg-forest-500 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-forest-400"
+          >
+            Check-in
+          </Link>
+          <Link
+            href={`/admin/events/${event.id}/bookings`}
+            className="rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white hover:text-forest-950"
+          >
+            View attendees
+          </Link>
+        </div>
       </div>
 
       <div className="mt-10">

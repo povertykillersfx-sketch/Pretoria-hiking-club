@@ -24,6 +24,8 @@ type BookingRow = {
   status: string;
   notes: string | null;
   created_at: string;
+  checkin_token: string | null;
+  checked_in_at: string | null;
 };
 
 function mapBooking(row: BookingRow): Booking {
@@ -42,12 +44,18 @@ function mapBooking(row: BookingRow): Booking {
     status: row.status as Booking["status"],
     notes: row.notes,
     createdAt: row.created_at,
+    checkinToken: row.checkin_token ?? "",
+    checkedInAt: row.checked_in_at,
   };
 }
 
 function generateReference(): string {
   const raw = randomBytes(4).toString("hex").toUpperCase();
   return `PHC-${raw}`;
+}
+
+function generateCheckinToken(): string {
+  return randomBytes(16).toString("hex");
 }
 
 export class BookingError extends Error {
@@ -116,14 +124,23 @@ export function createBooking(input: CreateBookingInput): BookingWithEvent {
       reference = generateReference();
     }
 
+    let token = generateCheckinToken();
+    while (
+      db
+        .prepare<[string], { id: number }>("SELECT id FROM bookings WHERE checkin_token = ?")
+        .get(token)
+    ) {
+      token = generateCheckinToken();
+    }
+
     const info = db
       .prepare(
         `INSERT INTO bookings (
            reference, event_id, distance, name, email, phone, people,
-           amount_cents, payment_method, payment_status, status, notes
+           amount_cents, payment_method, payment_status, status, notes, checkin_token
          ) VALUES (
            @reference, @event_id, @distance, @name, @email, @phone, @people,
-           @amount_cents, @payment_method, @payment_status, 'confirmed', @notes
+           @amount_cents, @payment_method, @payment_status, 'confirmed', @notes, @checkin_token
          )`,
       )
       .run({
@@ -138,6 +155,7 @@ export function createBooking(input: CreateBookingInput): BookingWithEvent {
         payment_method: paymentMethod,
         payment_status: paymentStatus,
         notes: data.notes?.trim() || null,
+        checkin_token: token,
       });
 
     return db
@@ -158,11 +176,233 @@ export function getBookingByReference(reference: string): BookingWithEvent | nul
     .prepare<[string], BookingRow>("SELECT * FROM bookings WHERE reference = ?")
     .get(reference.toUpperCase());
 
+  return hydrateBooking(row);
+}
+
+export function getBookingByToken(token: string): BookingWithEvent | null {
+  const cleaned = token.trim().toLowerCase();
+  if (!cleaned) return null;
+
+  const row = getDb()
+    .prepare<[string], BookingRow>("SELECT * FROM bookings WHERE checkin_token = ?")
+    .get(cleaned);
+
+  return hydrateBooking(row);
+}
+
+function hydrateBooking(row: BookingRow | undefined): BookingWithEvent | null {
   if (!row) return null;
   const event = getEventById(row.event_id);
   if (!event) return null;
-
   return { ...mapBooking(row), event };
+}
+
+export function lookupHikerTicket(reference: string, email: string): BookingWithEvent | null {
+  const booking = getBookingByReference(reference);
+  if (!booking) return null;
+  if (booking.email !== email.trim().toLowerCase()) return null;
+  return booking;
+}
+
+export function searchBookingsForEvent(eventId: number, query: string): Booking[] {
+  const term = query.trim();
+  if (term.length < 2) return [];
+
+  const parsed = parseCheckInCode(term);
+  if (parsed?.token) {
+    const row = getDb()
+      .prepare<[string, number], BookingRow>(
+        "SELECT * FROM bookings WHERE checkin_token = ? AND event_id = ?",
+      )
+      .get(parsed.token, eventId);
+    return row ? [mapBooking(row)] : [];
+  }
+
+  const safe = term.replace(/[%_]/g, "");
+  if (safe.length < 2) return [];
+
+  const like = `%${safe}%`;
+
+  return getDb()
+    .prepare<[number, string, string, string, string], BookingRow>(
+      `SELECT * FROM bookings
+       WHERE event_id = ?
+         AND (
+           reference LIKE ? COLLATE NOCASE
+           OR name LIKE ? COLLATE NOCASE
+           OR CAST(id AS TEXT) = ?
+         )
+       ORDER BY
+         CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END,
+         CASE WHEN CAST(id AS TEXT) = ? THEN 0 ELSE 1 END,
+         name COLLATE NOCASE
+       LIMIT 20`,
+    )
+    .all(eventId, like, like, term, term)
+    .map(mapBooking);
+}
+
+export type CheckInFailure =
+  | "not_found"
+  | "cancelled"
+  | "wrong_event"
+  | "already_checked_in";
+
+export type CheckInResult =
+  | { ok: true; booking: BookingWithEvent }
+  | {
+      ok: false;
+      reason: CheckInFailure;
+      message: string;
+      booking?: BookingWithEvent;
+    };
+
+export function checkInBooking(eventId: number, code: string): CheckInResult {
+  const db = getDb();
+
+  const run = db.transaction((payload: { eventId: number; code: string }): CheckInResult => {
+    const parsed = parseCheckInCode(payload.code);
+    if (!parsed) {
+      return { ok: false, reason: "not_found", message: "This QR code is not a valid booking." };
+    }
+
+    let row: BookingRow | undefined;
+    if (parsed.token) {
+      row = db.prepare<[string], BookingRow>("SELECT * FROM bookings WHERE checkin_token = ?").get(parsed.token);
+    } else if (parsed.reference) {
+      row = db
+        .prepare<[string], BookingRow>("SELECT * FROM bookings WHERE reference = ?")
+        .get(parsed.reference);
+    } else if (parsed.id != null) {
+      row = db.prepare<[number], BookingRow>("SELECT * FROM bookings WHERE id = ?").get(parsed.id);
+    } else {
+      return { ok: false, reason: "not_found", message: "This QR code is not a valid booking." };
+    }
+
+    const booking = hydrateBooking(row);
+    if (!booking) {
+      return { ok: false, reason: "not_found", message: "This QR code is not a valid booking." };
+    }
+
+    if (booking.status === "cancelled") {
+      return {
+        ok: false,
+        reason: "cancelled",
+        message: "This booking was cancelled and cannot be checked in.",
+        booking,
+      };
+    }
+
+    if (booking.eventId !== payload.eventId) {
+      const date = formatDateSafe(booking.event.date);
+      return {
+        ok: false,
+        reason: "wrong_event",
+        message: `Invalid for this event. This ticket is for ${booking.event.title} on ${date}.`,
+        booking,
+      };
+    }
+
+    if (booking.checkedInAt) {
+      return {
+        ok: false,
+        reason: "already_checked_in",
+        message: `${booking.name} is already checked in.`,
+        booking,
+      };
+    }
+
+    db.prepare("UPDATE bookings SET checked_in_at = datetime('now') WHERE id = ?").run(booking.id);
+    const updated = hydrateBooking(
+      db.prepare<[number], BookingRow>("SELECT * FROM bookings WHERE id = ?").get(booking.id),
+    )!;
+
+    return { ok: true, booking: updated };
+  });
+
+  return run.immediate({ eventId, code });
+}
+
+function formatDateSafe(iso: string): string {
+  try {
+    return new Intl.DateTimeFormat("en-ZA", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "Africa/Johannesburg",
+    }).format(new Date(`${iso}T12:00:00Z`));
+  } catch {
+    return iso;
+  }
+}
+
+export function getCheckInStats(eventId: number): {
+  confirmed: number;
+  hikers: number;
+  checkedInBookings: number;
+  checkedInHikers: number;
+} {
+  const row = getDb()
+    .prepare<
+      [number],
+      {
+        confirmed: number;
+        hikers: number;
+        checked_in_bookings: number;
+        checked_in_hikers: number;
+      }
+    >(
+      `SELECT
+         COALESCE(SUM(CASE WHEN status = 'confirmed' THEN 1 ELSE 0 END), 0) AS confirmed,
+         COALESCE(SUM(CASE WHEN status = 'confirmed' THEN people ELSE 0 END), 0) AS hikers,
+         COALESCE(SUM(CASE WHEN status = 'confirmed' AND checked_in_at IS NOT NULL THEN 1 ELSE 0 END), 0) AS checked_in_bookings,
+         COALESCE(SUM(CASE WHEN status = 'confirmed' AND checked_in_at IS NOT NULL THEN people ELSE 0 END), 0) AS checked_in_hikers
+       FROM bookings
+       WHERE event_id = ?`,
+    )
+    .get(eventId)!;
+
+  return {
+    confirmed: row.confirmed,
+    hikers: row.hikers,
+    checkedInBookings: row.checked_in_bookings,
+    checkedInHikers: row.checked_in_hikers,
+  };
+}
+
+export type ParsedCheckInCode =
+  | { token: string; reference?: undefined; id?: undefined }
+  | { reference: string; token?: undefined; id?: undefined }
+  | { id: number; token?: undefined; reference?: undefined };
+
+export function parseCheckInCode(raw: string): ParsedCheckInCode | null {
+  const value = raw.trim();
+  if (!value) return null;
+
+  const prefixed = value.match(/phc1[.:]([a-f0-9]{32})/i);
+  if (prefixed) return { token: prefixed[1].toLowerCase() };
+
+  try {
+    const url = new URL(value);
+    const fromQuery = url.searchParams.get("token") ?? url.searchParams.get("code");
+    if (fromQuery && /^[a-f0-9]{32}$/i.test(fromQuery)) {
+      return { token: fromQuery.toLowerCase() };
+    }
+    const pathToken = url.pathname.match(/\/(?:t|ticket)\/([a-f0-9]{32})/i);
+    if (pathToken) return { token: pathToken[1].toLowerCase() };
+  } catch {
+    // Not a URL — keep parsing as a raw code.
+  }
+
+  const reference = value.toUpperCase().match(/PHC-[A-F0-9]{8}/);
+  if (reference) return { reference: reference[0] };
+
+  if (/^[a-f0-9]{32}$/i.test(value)) return { token: value.toLowerCase() };
+
+  if (/^\d{1,10}$/.test(value)) return { id: Number(value) };
+
+  return null;
 }
 
 export function getBookingsForEvent(eventId: number): Booking[] {
@@ -239,6 +479,7 @@ export function bookingsToCsv(
     "Payment method",
     "Payment status",
     "Booking status",
+    "Checked in",
     "Notes",
     "Booked at",
     "Event",
@@ -267,6 +508,7 @@ export function bookingsToCsv(
       booking.paymentMethod,
       booking.paymentStatus,
       booking.status,
+      booking.checkedInAt ?? "",
       booking.notes ?? "",
       booking.createdAt,
       eventTitle,
