@@ -114,7 +114,7 @@ export function CheckInDesk({
                   <button
                     type="button"
                     disabled={busy || hit.status === "cancelled"}
-                    onClick={() => handleCode(hit.reference)}
+                    onClick={() => handleCode(String(hit.id))}
                     className="shrink-0 rounded-full bg-forest-500 px-3.5 py-2 text-xs font-bold text-white disabled:opacity-40"
                   >
                     {hit.checkedInAt ? "View" : "Check in"}

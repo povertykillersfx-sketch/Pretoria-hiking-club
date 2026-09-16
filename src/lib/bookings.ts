@@ -395,7 +395,7 @@ export function parseCheckInCode(raw: string): ParsedCheckInCode | null {
     // Not a URL — keep parsing as a raw code.
   }
 
-  const reference = value.toUpperCase().match(/PHC-[A-F0-9]{8}/);
+  const reference = value.toUpperCase().match(/PHC-[A-Z0-9]{4,12}/);
   if (reference) return { reference: reference[0] };
 
   if (/^[a-f0-9]{32}$/i.test(value)) return { token: value.toLowerCase() };
