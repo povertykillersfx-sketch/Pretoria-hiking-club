@@ -111,14 +111,20 @@ export function CheckInDesk({
                       {hit.status === "cancelled" ? " · cancelled" : ""}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    disabled={busy || hit.status === "cancelled"}
-                    onClick={() => handleCode(String(hit.id))}
-                    className="shrink-0 rounded-full bg-forest-500 px-3.5 py-2 text-xs font-bold text-white disabled:opacity-40"
-                  >
-                    {hit.checkedInAt ? "View" : "Check in"}
-                  </button>
+                  {hit.status === "cancelled" ? (
+                    <span className="shrink-0 text-xs font-bold uppercase tracking-[0.14em] text-ember">
+                      Cancelled
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => handleCode(String(hit.id))}
+                      className="shrink-0 rounded-full bg-forest-500 px-3.5 py-2 text-xs font-bold text-white disabled:opacity-40"
+                    >
+                      {hit.checkedInAt ? "View" : "Check in"}
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
