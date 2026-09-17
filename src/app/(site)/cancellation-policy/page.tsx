@@ -4,7 +4,7 @@ import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Cancellation Policy",
-  description: `How cancellations, refunds and transfers work for ${site.name} events.`,
+  description: `When ${site.name} issues refunds, and how to request one if we cancel an event.`,
   alternates: { canonical: "/cancellation-policy" },
 };
 
@@ -13,50 +13,26 @@ export default function CancellationPolicyPage() {
     <LegalPage
       eyebrow="Legal"
       title="Cancellation Policy"
-      intro="Plans change. Here is exactly how cancellations, transfers and refunds work."
+      intro="Please read this before you book. Refunds are only issued when we cancel or postpone an event."
       image="/images/gallery-mountain-lake.jpg"
       sections={[
         {
-          heading: "Cancelling a day hike",
-          bullets: [
-            "More than 7 days before the event: full refund, or move your spot to another hike at no cost.",
-            "3 to 7 days before the event: 50% refund, or a full credit towards another hike within 6 months.",
-            "Less than 3 days before the event: no refund, because permits, catering and reserve fees are already paid. You may send someone else in your place.",
+          heading: "Event cancellations by organisers",
+          paragraphs: [
+            "The Pretoria Hiking Club reserves the right to cancel or postpone any scheduled hike or event due to unforeseen circumstances, including but not limited to adverse weather conditions or issues affecting the safety or accessibility of the hiking location. In such cases, participants will be notified as soon as possible, and a full refund will be issued.",
           ],
         },
         {
-          heading: "Cancelling a camping weekend or getaway",
+          heading: "Participant cancellations",
           paragraphs: [
-            "Overnight trips are booked and paid for in advance with accommodation providers, so the timelines are longer.",
-          ],
-          bullets: [
-            "More than 30 days before departure: full refund less a 10% administration fee.",
-            "14 to 30 days before departure: 50% refund.",
-            "Less than 14 days before departure: no refund. You may transfer your spot to another person.",
+            "Except in the case of an organiser-initiated cancellation as outlined above, refunds will not be provided for hikes or events. We encourage participants to confirm their availability before booking.",
           ],
         },
         {
-          heading: "Transferring your spot",
+          heading: "How to request a refund",
           paragraphs: [
-            `You can give your spot to someone else at any time before the event at no charge. Email ${site.email} with your booking reference and the new hiker's name, email and phone number so that we can update the attendee list.`,
-          ],
-        },
-        {
-          heading: "If we cancel",
-          paragraphs: [
-            "If we cancel an event because of weather, safety or access issues, you choose between a full refund or moving your booking to the next available date. We always try to postpone rather than cancel.",
-          ],
-        },
-        {
-          heading: "No shows and late arrivals",
-          paragraphs: [
-            "Late arrivals may not be accommodated once the hike has started, and no-shows are not refunded. Please arrive within the arrival window on your event page.",
-          ],
-        },
-        {
-          heading: "How to cancel",
-          paragraphs: [
-            `Email ${site.email} or WhatsApp us with your booking reference. Refunds are processed back to the original payment method within 10 working days.`,
+            "If your event is cancelled by the organisers, please contact us on +27 67 986 2379 with your booking reference and proof of payment, and your refund will be processed promptly.",
+            "Thank you for your understanding and for being part of the Pretoria Hiking Club community.",
           ],
         },
       ]}

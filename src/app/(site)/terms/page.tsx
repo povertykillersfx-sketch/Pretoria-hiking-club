@@ -13,64 +13,49 @@ export default function TermsPage() {
     <LegalPage
       eyebrow="Legal"
       title="Terms & Conditions"
-      intro="The house rules that keep our events safe, organised and enjoyable for everyone."
+      intro="By registering for or participating in any Pretoria Hiking Club event, you agree to these terms."
       image="/images/gallery-green-valley.jpg"
       sections={[
         {
-          heading: "1. Booking and confirmation",
+          heading: "1. Acceptance of terms",
           paragraphs: [
-            "A booking is only confirmed once you receive a confirmation email with your booking reference. Card payments confirm immediately. EFT bookings are held for 48 hours and are released if payment has not been received.",
-            "Each booking may include up to 10 people. Every person attending must be included in the number of spots you book, including children.",
+            'By registering for or participating in any event, hike, or activity organised by the Pretoria Hiking Club ("the Club"), you agree to be bound by these Terms and Conditions. If you do not agree, please do not book or participate in our events.',
           ],
         },
         {
-          heading: "2. Capacity and sold out events",
+          heading: "2. Eligibility & health requirements",
           paragraphs: [
-            "Every event has a fixed capacity so that our trail leaders can look after the group properly. When an event is fully booked, online bookings close automatically and the event is marked as sold out. Waiting list requests can be sent to " +
-              site.email +
-              ".",
+            "Participants are responsible for ensuring they are physically fit and medically able to take part in the chosen hike or event. Should you have any pre-existing medical conditions, injuries, or concerns, please consult a medical professional before joining and inform the organisers in advance.",
           ],
         },
         {
-          heading: "3. Arrival times",
+          heading: "3. Assumption of risk",
           paragraphs: [
-            "Please arrive within the arrival window shown on your event page. Late arrivals may not be accommodated once the hike has started, and no refund is given in that case. This is a safety requirement, not an inconvenience — we cannot send people onto a trail behind a moving group.",
+            "Hiking and outdoor activities carry inherent risks, including but not limited to uneven terrain, weather exposure, wildlife encounters, and physical exertion. By participating, you acknowledge these risks and voluntarily assume full responsibility for your own safety and wellbeing during Club events.",
           ],
         },
         {
-          heading: "4. Fitness, health and safety",
+          heading: "4. Cancellation policy",
           paragraphs: [
-            "Hiking carries inherent risk. By booking you confirm that you are medically fit to take part in the route you have selected, and that you will follow the instructions of the trail leaders at all times.",
-            "Tell us about any medical condition, allergy or injury in the notes field when you book, or email us before the event. We carry a basic first aid kit but we are not a medical service.",
-          ],
-          bullets: [
-            "Choose the 5KM route if you are unsure of your fitness level.",
-            "Children must be accompanied by a responsible adult at all times.",
-            "Alcohol is not permitted on the trail, only at the social afterwards where it is allowed by the venue.",
+            "Events may be cancelled by the organisers due to unforeseen bad weather or location-related issues, in which case a full refund will be issued upon request. Refunds will not be provided for cancellations initiated by participants or for any other circumstances. See our full Cancellation Policy for details.",
           ],
         },
         {
-          heading: "5. Liability",
+          heading: "5. Code of conduct",
           paragraphs: [
-            `${site.name}, its organisers and volunteers are not liable for personal injury, loss or damage to property arising from participation in any event, except where caused by gross negligence. Participants take part at their own risk.`,
+            "Participants are expected to treat fellow hikers, organisers, and the natural environment with respect. The Club reserves the right to remove any participant from an event without refund for behaviour that endangers others, damages the environment, or disrupts the group.",
           ],
         },
         {
-          heading: "6. Photography",
+          heading: "6. Photography and media",
           paragraphs: [
-            "We take photos and video at our events and use them on this website and on social media. If you would prefer not to appear in club photos, tell us on the day or email us and we will remove the images.",
+            "By attending our events, you automatically consent to being photographed or filmed for promotional purposes, including on social media.",
           ],
         },
         {
-          heading: "7. Conduct",
+          heading: "7. Changes to these terms",
           paragraphs: [
-            "We are a welcoming, inclusive community. Harassment, discrimination or aggressive behaviour of any kind results in removal from the event and the club without a refund. Leave the trail cleaner than you found it — everything you carry in, you carry out.",
-          ],
-        },
-        {
-          heading: "8. Changes to events",
-          paragraphs: [
-            "Routes, schedules and venues can change because of weather, access permissions or safety. We communicate changes by email and on the event WhatsApp group as early as possible. If we cancel an event, you can move your booking to another date or receive a full refund.",
+            "The Club reserves the right to amend these Terms and Conditions at any time. Continued participation in events following any changes constitutes acceptance of the updated terms.",
           ],
         },
       ]}
