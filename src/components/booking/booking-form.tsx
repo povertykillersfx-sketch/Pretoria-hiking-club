@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { submitBooking, type BookingFormState } from "@/app/actions/booking";
+import { PaymentInstructions } from "@/components/booking/payment-instructions";
 import { ArrowIcon, buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { availableDistances, formatDate, formatPrice, formatPriceExact } from "@/lib/format";
-import { site } from "@/lib/site";
 import type { EventWithAvailability, PaymentMethod, TrailDistance } from "@/lib/types";
 
 const initialState: BookingFormState = { status: "idle" };
@@ -340,9 +340,9 @@ export function BookingForm({ event }: { event: EventWithAvailability }) {
               >
                 <span className="flex items-center justify-between gap-4">
                   <span className="font-display text-lg font-bold tracking-tight">
-                    Pay now by card
+                    Pay by card / Yoco
                   </span>
-                  <span className="text-sm opacity-80">Instant confirmation</span>
+                  <span className="text-sm opacity-80">Yoco</span>
                 </span>
                 <span
                   className={cn(
@@ -350,8 +350,8 @@ export function BookingForm({ event }: { event: EventWithAvailability }) {
                     paymentMethod === "card" ? "text-white/70" : "text-stone",
                   )}
                 >
-                  Secure checkout. Your spot is confirmed the moment payment goes
-                  through.
+                  Your spot is held when you confirm. Pay the total on Yoco with
+                  your booking reference.
                 </span>
               </button>
 
@@ -384,18 +384,15 @@ export function BookingForm({ event }: { event: EventWithAvailability }) {
               </button>
             </div>
 
+            {paymentMethod === "card" && (
+              <div className="rounded-3xl bg-sand/70 p-5">
+                <PaymentInstructions showEft={false} />
+              </div>
+            )}
+
             {paymentMethod === "eft" && (
-              <div className="rounded-3xl bg-sand/70 p-5 text-sm text-forest-900/80">
-                <p className="font-display text-base font-bold tracking-tight text-forest-900">
-                  {site.bank.accountName}
-                </p>
-                <p className="mt-2 leading-relaxed">
-                  {site.bank.bank} · Account {site.bank.accountNumber}
-                  <br />
-                  Branch code {site.bank.branchCode}
-                  <br />
-                  Use your booking reference as the payment reference.
-                </p>
+              <div className="rounded-3xl bg-sand/70 p-5">
+                <PaymentInstructions />
               </div>
             )}
           </section>
@@ -425,7 +422,7 @@ export function BookingForm({ event }: { event: EventWithAvailability }) {
                 "Payment",
                 isPaid
                   ? paymentMethod === "card"
-                    ? `Card · ${formatPriceExact(total)}`
+                    ? `Card (Yoco) · ${formatPriceExact(total)}`
                     : `EFT · ${formatPriceExact(total)}`
                   : "Free event",
               ],

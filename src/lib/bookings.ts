@@ -109,11 +109,9 @@ export function createBooking(input: CreateBookingInput): BookingWithEvent {
     const isFree = event.priceCents === 0;
     const amountCents = event.priceCents * data.people;
     const paymentMethod: PaymentMethod = isFree ? "free" : data.paymentMethod;
-    const paymentStatus: PaymentStatus = isFree
-      ? "not_required"
-      : paymentMethod === "card"
-        ? "paid"
-        : "pending";
+    // Card (Yoco) and EFT both confirm the spot immediately. Payment is marked
+    // paid once staff see it land, because Yoco's pay link has no webhook here.
+    const paymentStatus: PaymentStatus = isFree ? "not_required" : "pending";
 
     let reference = generateReference();
     while (

@@ -34,8 +34,8 @@ administrator manages events, capacity and attendees from a built-in admin area.
   photos, per-event schedule, what's included and what to bring
 - Photo uploads straight from the event form, plus a picker for existing photos
 - Publish / unpublish, close / reopen bookings, delete events
-- Attendee list per event with trail split, outstanding EFT payments, check-in
-  status, mark-paid and cancel actions
+- Attendee list per event with trail split, outstanding Yoco/EFT payments,
+  check-in status, mark-paid and cancel actions
 - Trailhead QR check-in: pick a hike, scan unique booking codes with the phone
   camera, or search by name / booking ID when a phone will not display the QR
 - CSV export of attendees for an event (includes checked-in time)
@@ -108,19 +108,19 @@ to the console so the booking flow still works end to end locally.
 
 ## Payments
 
-The booking flow supports two methods:
+The booking flow supports two methods. Both confirm the spot immediately and
+leave payment as **pending** until a club administrator marks it paid (Yoco's
+pay link has no webhook on this site).
 
-- **Card** — marks the booking as paid immediately and confirms the spot. This
-  is wired as a single step so a real South African gateway (Yoco, Payfast,
-  Peach) can be dropped in: redirect to the gateway after `createBooking()` and
-  update `payment_status` from the gateway webhook.
-- **EFT** — holds the spot, emails the banking details with the booking
-  reference, and shows in the admin attendee list as "Awaiting EFT" until the
-  administrator marks it paid.
+- **Card / Yoco** — after confirming, hikers pay the event total at
+  [pay.yoco.com/Pretoriahikingclub](https://pay.yoco.com/Pretoriahikingclub)
+  using their booking reference.
+- **EFT** — hikers pay into the club FNB Gold Business Account (`63227120283`,
+  branch `250655`) using the booking reference. Proof of payment should be
+  emailed at least 48 hours before the event.
 
-Free events skip the payment step entirely.
-
-Bank details and club contact information live in `src/lib/site.ts`.
+Free events skip the payment step entirely. Bank details, the Yoco pay link
+and club contact information live in `src/lib/site.ts`.
 
 ## Data model
 

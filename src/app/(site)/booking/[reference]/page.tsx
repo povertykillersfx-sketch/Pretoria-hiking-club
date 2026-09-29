@@ -4,10 +4,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArriveOnTimeNotice, ScheduleTimeline } from "@/components/schedule-timeline";
 import { TicketQr } from "@/components/booking/ticket-qr";
+import { PaymentInstructions } from "@/components/booking/payment-instructions";
 import { ArrowIcon, buttonClasses } from "@/components/ui/button";
 import { getBookingByReference } from "@/lib/bookings";
 import { formatDate, formatPriceExact, trailLabel } from "@/lib/format";
-import { site } from "@/lib/site";
+import { site, whatsappShareUrl } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -27,9 +28,7 @@ export default async function BookingConfirmationPage({
   if (!booking) notFound();
 
   const { event } = booking;
-  const shareText = encodeURIComponent(
-    `I just booked ${event.title} with ${site.name} on ${formatDate(event.date)}. Join me! ${site.url}/events/${event.slug}`,
-  );
+  const shareMessage = `I just booked ${event.title} with ${site.name} on ${formatDate(event.date)}. Join me! ${site.url}/events/${event.slug}`;
 
   return (
     <>
@@ -125,18 +124,17 @@ export default async function BookingConfirmationPage({
             {booking.paymentStatus === "pending" && (
               <div className="mt-6 rounded-4xl border border-ember/40 bg-ember/10 p-6">
                 <h3 className="font-display text-lg font-bold tracking-tight text-forest-950">
-                  Finish your EFT payment
+                  Finish your payment
                 </h3>
-                <p className="mt-3 text-sm leading-relaxed text-forest-900/80">
-                  {site.bank.accountName}
-                  <br />
-                  {site.bank.bank} · Account {site.bank.accountNumber}
-                  <br />
-                  Branch code {site.bank.branchCode}
-                  <br />
-                  <strong>Reference: {booking.reference}</strong>
+                <p className="mt-2 text-sm text-forest-900/70">
+                  Your spot is held. Pay {formatPriceExact(booking.amountCents)}{" "}
+                  by card on Yoco or by EFT, using reference{" "}
+                  <strong className="text-forest-950">{booking.reference}</strong>.
                 </p>
-                <p className="mt-3 text-sm text-forest-900/70">
+                <div className="mt-5">
+                  <PaymentInstructions reference={booking.reference} />
+                </div>
+                <p className="mt-4 text-sm text-forest-900/70">
                   Send proof of payment to {site.email} at least 48 hours before
                   the event to keep your spot.
                 </p>
@@ -151,7 +149,7 @@ export default async function BookingConfirmationPage({
                 Add to calendar
               </a>
               <a
-                href={`${site.whatsapp}?text=${shareText}`}
+                href={whatsappShareUrl(shareMessage)}
                 target="_blank"
                 rel="noreferrer noopener"
                 className={buttonClasses("outlineDark", "md")}

@@ -29,7 +29,7 @@ export default async function HomePage() {
       addressRegion: "Gauteng",
       addressCountry: "ZA",
     },
-    sameAs: [site.instagram, site.tiktok],
+    sameAs: [site.instagram, site.tiktok, site.whatsappGroup],
     image: `${site.url}/images/hero-group-hike.jpg`,
   };
 

@@ -75,7 +75,7 @@ export default async function EventBookingsPage({
           { label: "Remaining", value: String(event.spotsRemaining) },
           { label: "5KM hikers", value: String(fiveKm) },
           { label: "10KM hikers", value: String(tenKm) },
-          { label: "Awaiting EFT", value: String(outstanding.length) },
+          { label: "Awaiting payment", value: String(outstanding.length) },
           {
             label: "Checked in",
             value: `${stats.checkedInBookings}/${stats.confirmed}`,
@@ -132,7 +132,7 @@ export default async function EventBookingsPage({
                   {booking.status === "cancelled" ? (
                     <span className="text-ember">Cancelled</span>
                   ) : booking.paymentStatus === "pending" ? (
-                    <span className="text-ember">Awaiting EFT</span>
+                    <span className="text-ember">Awaiting payment</span>
                   ) : booking.paymentStatus === "paid" ? (
                     <span className="text-forest-300">Paid</span>
                   ) : (

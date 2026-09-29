@@ -60,7 +60,7 @@ export default async function AdminDashboardPage() {
         <StatCard
           label="Payments received"
           value={formatPrice(stats.paidRevenueCents)}
-          hint="Card payments marked paid"
+          hint="Yoco and EFT marked paid"
         />
       </div>
 
@@ -188,7 +188,7 @@ export default async function AdminDashboardPage() {
                   {booking.status === "cancelled"
                     ? "Cancelled"
                     : booking.paymentStatus === "pending"
-                      ? "Awaiting EFT"
+                      ? "Awaiting payment"
                       : booking.paymentStatus === "paid"
                         ? "Paid"
                         : "Confirmed"}

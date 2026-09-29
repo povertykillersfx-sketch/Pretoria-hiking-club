@@ -69,7 +69,8 @@ function layout(title: string, body: string): string {
                 <p style="margin:0;">
                   <a href="${site.url}" style="color:#14512f;">${site.url.replace(/^https?:\/\//, "")}</a> ·
                   <a href="${site.instagram}" style="color:#14512f;">Instagram</a> ·
-                  <a href="${site.whatsapp}" style="color:#14512f;">WhatsApp</a>
+                  <a href="${site.tiktok}" style="color:#14512f;">TikTok</a> ·
+                  <a href="${site.whatsappGroup}" style="color:#14512f;">WhatsApp</a>
                 </p>
               </td>
             </tr>
@@ -107,17 +108,24 @@ export async function sendBookingConfirmation(booking: BookingWithEvent): Promis
         ? `Paid · ${formatPriceExact(booking.amountCents)}`
         : `Payment outstanding · ${formatPriceExact(booking.amountCents)}`;
 
-  const eftBlock =
+  const paymentBlock =
     booking.paymentStatus === "pending"
       ? `<div style="margin-top:24px;padding:18px;border-radius:16px;background:#f8f6f1;">
-           <p style="margin:0 0 8px;font-weight:700;font-size:14px;">EFT payment details</p>
+           <p style="margin:0 0 8px;font-weight:700;font-size:14px;">Finish your payment</p>
+           <p style="margin:0 0 14px;font-size:13px;line-height:1.7;color:#3c4a42;">
+             Your spot is held. Pay ${esc(formatPriceExact(booking.amountCents))} by card on Yoco or by EFT, using reference <strong>${esc(booking.reference)}</strong>.
+           </p>
+           <p style="margin:0 0 16px;">
+             <a href="${site.payLink}" style="display:inline-block;background:#14512f;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:700;font-size:14px;">Pay with Yoco</a>
+           </p>
+           <p style="margin:0 0 6px;font-weight:700;font-size:13px;">Or pay by EFT</p>
            <p style="margin:0;font-size:13px;line-height:1.7;color:#3c4a42;">
-             ${site.bank.accountName}<br/>
-             ${site.bank.bank} · Account ${site.bank.accountNumber}<br/>
-             Branch code ${site.bank.branchCode}<br/>
+             ${esc(site.bank.accountName)}<br/>
+             ${esc(site.bank.bank)} · Account ${esc(site.bank.accountNumber)}<br/>
+             Branch code ${esc(site.bank.branchCode)}<br/>
              <strong>Reference: ${esc(booking.reference)}</strong>
            </p>
-           <p style="margin:10px 0 0;font-size:12px;color:#6f7a72;">Please send proof of payment to ${site.email} at least 48 hours before the event.</p>
+           <p style="margin:10px 0 0;font-size:12px;color:#6f7a72;">Please send proof of payment to ${esc(site.email)} at least 48 hours before the event.</p>
          </div>`
       : "";
 
@@ -147,7 +155,7 @@ export async function sendBookingConfirmation(booking: BookingWithEvent): Promis
        ${detailRow("People", String(booking.people))}
        ${detailRow("Payment", paymentLine)}
      </table>
-     ${eftBlock}
+     ${paymentBlock}
      <div style="margin-top:24px;padding:18px;border-radius:16px;background:#061a11;color:#ffffff;">
        <p style="margin:0;font-size:14px;font-weight:700;">⏰ Please arrive on time</p>
        <p style="margin:6px 0 0;font-size:13px;line-height:1.6;color:#d9f0e2;">Late arrivals may not be accommodated once the hike has started. Be at ${esc(event.meetingPoint)} by ${esc(event.arrivalTime)}.</p>
@@ -176,6 +184,15 @@ export async function sendBookingConfirmation(booking: BookingWithEvent): Promis
     `Meeting point: ${event.meetingPoint}`,
     `People: ${booking.people}`,
     `Payment: ${paymentLine}`,
+    ...(booking.paymentStatus === "pending"
+      ? [
+          ``,
+          `Finish your payment (${formatPriceExact(booking.amountCents)}) using reference ${booking.reference}.`,
+          `Pay with Yoco: ${site.payLink}`,
+          `Or EFT to ${site.bank.accountName}, ${site.bank.bank}, account ${site.bank.accountNumber}, branch ${site.bank.branchCode}.`,
+          `Send proof of payment to ${site.email} at least 48 hours before the event.`,
+        ]
+      : []),
     ``,
     `PLEASE ARRIVE ON TIME — late arrivals may not be accommodated once the hike has started.`,
     ``,

@@ -48,7 +48,7 @@ function toView(result: CheckInResult): CheckInView {
       checkedInAt: booking.checkedInAt,
       paymentWarning:
         booking.paymentStatus === "pending"
-          ? "EFT payment is still outstanding."
+          ? "Payment is still outstanding."
           : undefined,
     };
   }

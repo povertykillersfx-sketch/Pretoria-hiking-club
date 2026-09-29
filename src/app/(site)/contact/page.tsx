@@ -30,7 +30,7 @@ const faqs = [
   {
     question: "How do I pay?",
     answer:
-      "Pay by card when you book for instant confirmation, or choose EFT and we hold your spot for 48 hours while you make the payment.",
+      "Pay by card on Yoco after you book, or EFT into our FNB Gold Business Account. Use your booking reference so we can match the payment. Your spot is held either way.",
   },
   {
     question: "Do you do corporate or private group hikes?",
@@ -86,7 +86,18 @@ export default function ContactPage() {
                     rel="noreferrer noopener"
                     className="font-semibold text-forest-800 underline underline-offset-4"
                   >
-                    Message the crew
+                    {site.phone}
+                  </a>
+                </li>
+                <li>
+                  <p className="text-stone">WhatsApp group</p>
+                  <a
+                    href={site.whatsappGroup}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="font-semibold text-forest-800 underline underline-offset-4"
+                  >
+                    Join the club group
                   </a>
                 </li>
                 <li>
@@ -97,7 +108,18 @@ export default function ContactPage() {
                     rel="noreferrer noopener"
                     className="font-semibold text-forest-800 underline underline-offset-4"
                   >
-                    @pretoriahikingclub
+                    {site.instagramHandle}
+                  </a>
+                </li>
+                <li>
+                  <p className="text-stone">TikTok</p>
+                  <a
+                    href={site.tiktok}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="font-semibold text-forest-800 underline underline-offset-4"
+                  >
+                    {site.tiktokHandle}
                   </a>
                 </li>
                 <li>
