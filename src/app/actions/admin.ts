@@ -86,6 +86,7 @@ const eventSchema = z.object({
   distance10km: z.coerce.boolean(),
   difficulty: z.enum(["Easy", "Moderate", "Challenging"]),
   priceRands: z.coerce.number().min(0, "Price cannot be negative."),
+  paymentLink: z.string().trim().optional().or(z.literal("")),
   capacity: z.coerce.number().int().min(1, "Capacity must be at least 1."),
   image: z.string().trim().min(1, "Choose a cover photo."),
   gallery: z.string().optional().or(z.literal("")),
@@ -126,7 +127,37 @@ function parseSchedule(value: string | undefined): ScheduleItem[] {
   }
 }
 
-function toEventInput(data: z.infer<typeof eventSchema>, id?: number): EventInput {
+function parsePaymentLink(
+  value: string | undefined,
+  priceRands: number,
+  published: boolean,
+): { link: string | null; error?: string } {
+  const raw = (value ?? "").trim();
+
+  if (!raw) {
+    if (priceRands > 0 && published) {
+      return { link: null, error: "Add a payment link for this hike before you publish it." };
+    }
+    return { link: null };
+  }
+
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return { link: null, error: "Payment link must be a full URL, for example https://pay.yoco.com/…" };
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") {
+    return { link: null, error: "Payment link must start with https://" };
+  }
+  return { link: url.toString() };
+}
+
+function toEventInput(
+  data: z.infer<typeof eventSchema>,
+  paymentLink: string | null,
+  id?: number,
+): EventInput {
   return {
     slug: uniqueSlug(data.slug?.trim() || data.title, id),
     title: data.title,
@@ -144,6 +175,7 @@ function toEventInput(data: z.infer<typeof eventSchema>, id?: number): EventInpu
     distance10km: data.distance10km,
     difficulty: data.difficulty,
     priceCents: Math.round(data.priceRands * 100),
+    paymentLink,
     capacity: data.capacity,
     image: data.image,
     gallery: lines(data.gallery),
@@ -173,6 +205,7 @@ function readEventForm(formData: FormData) {
     distance10km: formData.get("distance10km") === "on" || formData.get("distance10km") === "true",
     difficulty: formData.get("difficulty"),
     priceRands: formData.get("priceRands"),
+    paymentLink: formData.get("paymentLink") ?? "",
     capacity: formData.get("capacity"),
     image: formData.get("image"),
     gallery: formData.get("gallery") ?? "",
@@ -220,7 +253,20 @@ export async function saveEvent(
     };
   }
 
-  const input = toEventInput(parsed.data, id);
+  const payment = parsePaymentLink(
+    parsed.data.paymentLink,
+    parsed.data.priceRands,
+    parsed.data.published,
+  );
+  if (payment.error) {
+    return {
+      status: "error",
+      message: "Please fix the highlighted fields.",
+      fieldErrors: { paymentLink: payment.error },
+    };
+  }
+
+  const input = toEventInput(parsed.data, payment.link, id);
 
   if (id) {
     updateEvent(id, input);
@@ -249,7 +295,10 @@ export async function togglePublishedAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = Number(formData.get("id"));
   const published = formData.get("published") === "true";
-  setPublished(id, published);
+  const result = setPublished(id, published);
+  if (!result.ok) {
+    redirect("/admin/events?error=payment-link");
+  }
   revalidatePath("/admin/events");
   revalidatePath("/events");
   revalidatePath("/");

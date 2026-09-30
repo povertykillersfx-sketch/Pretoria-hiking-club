@@ -254,6 +254,25 @@ export function EventForm({
           </Label>
         </div>
 
+        <Label
+          title="Payment link"
+          hint="Yoco (or other) pay link for this event only"
+          error={errors.paymentLink}
+        >
+          <input
+            type="url"
+            name="paymentLink"
+            defaultValue={event?.paymentLink ?? ""}
+            className={input}
+            placeholder="https://pay.yoco.com/this-hike"
+            inputMode="url"
+          />
+          <span className="mt-2 block text-xs leading-relaxed text-white/45">
+            Each hike needs its own link because prices differ. Required before
+            you publish a paid event. Leave blank for free events.
+          </span>
+        </Label>
+
         <div className="flex flex-wrap gap-3">
           <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-white/15 bg-forest-950/60 px-5 py-3 text-white">
             <input

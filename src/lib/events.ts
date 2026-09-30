@@ -25,6 +25,7 @@ type EventRow = {
   distance_10km: number;
   difficulty: string;
   price_cents: number;
+  payment_link: string | null;
   capacity: number;
   image: string;
   gallery: string;
@@ -66,6 +67,7 @@ function mapEvent(row: EventRow): HikeEvent {
     distance10km: Boolean(row.distance_10km),
     difficulty: row.difficulty as Difficulty,
     priceCents: row.price_cents,
+    paymentLink: row.payment_link?.trim() ? row.payment_link.trim() : null,
     capacity: row.capacity,
     image: row.image,
     gallery: parseJson<string[]>(row.gallery, []),
@@ -188,6 +190,7 @@ export type EventInput = {
   distance10km: boolean;
   difficulty: Difficulty;
   priceCents: number;
+  paymentLink: string | null;
   capacity: number;
   image: string;
   gallery: string[];
@@ -216,6 +219,7 @@ function toParams(input: EventInput) {
     distance_10km: input.distance10km ? 1 : 0,
     difficulty: input.difficulty,
     price_cents: input.priceCents,
+    payment_link: input.paymentLink,
     capacity: input.capacity,
     image: input.image,
     gallery: JSON.stringify(input.gallery),
@@ -233,12 +237,12 @@ export function createEvent(input: EventInput): number {
       `INSERT INTO events (
          slug, title, category, summary, description, location, meeting_point, map_url,
          event_date, start_time, arrival_time, end_time, distance_5km, distance_10km,
-         difficulty, price_cents, capacity, image, gallery, schedule, includes, bring,
+         difficulty, price_cents, payment_link, capacity, image, gallery, schedule, includes, bring,
          published, bookings_closed
        ) VALUES (
          @slug, @title, @category, @summary, @description, @location, @meeting_point, @map_url,
          @event_date, @start_time, @arrival_time, @end_time, @distance_5km, @distance_10km,
-         @difficulty, @price_cents, @capacity, @image, @gallery, @schedule, @includes, @bring,
+         @difficulty, @price_cents, @payment_link, @capacity, @image, @gallery, @schedule, @includes, @bring,
          @published, @bookings_closed
        )`,
     )
@@ -256,7 +260,7 @@ export function updateEvent(id: number, input: EventInput): void {
          map_url = @map_url, event_date = @event_date, start_time = @start_time,
          arrival_time = @arrival_time, end_time = @end_time, distance_5km = @distance_5km,
          distance_10km = @distance_10km, difficulty = @difficulty, price_cents = @price_cents,
-         capacity = @capacity, image = @image, gallery = @gallery, schedule = @schedule,
+         payment_link = @payment_link, capacity = @capacity, image = @image, gallery = @gallery, schedule = @schedule,
          includes = @includes, bring = @bring, published = @published,
          bookings_closed = @bookings_closed, updated_at = datetime('now')
        WHERE id = @id`,
@@ -276,12 +280,21 @@ export function setBookingsClosed(id: number, closed: boolean): void {
     .run(closed ? 1 : 0, id);
 }
 
-export function setPublished(id: number, published: boolean): void {
+export function setPublished(id: number, published: boolean): { ok: true } | { ok: false; reason: "payment_link" } {
+  if (published) {
+    const event = getEventById(id);
+    if (event && event.priceCents > 0 && !event.paymentLink) {
+      return { ok: false, reason: "payment_link" };
+    }
+  }
+
   getDb()
     .prepare(
       "UPDATE events SET published = ?, updated_at = datetime('now') WHERE id = ?",
     )
     .run(published ? 1 : 0, id);
+
+  return { ok: true };
 }
 
 export function slugify(value: string): string {

@@ -132,7 +132,10 @@ export default async function BookingConfirmationPage({
                   <strong className="text-forest-950">{booking.reference}</strong>.
                 </p>
                 <div className="mt-5">
-                  <PaymentInstructions reference={booking.reference} />
+                  <PaymentInstructions
+                    reference={booking.reference}
+                    payLink={event.paymentLink}
+                  />
                 </div>
                 <p className="mt-4 text-sm text-forest-900/70">
                   Send proof of payment to {site.email} at least 48 hours before

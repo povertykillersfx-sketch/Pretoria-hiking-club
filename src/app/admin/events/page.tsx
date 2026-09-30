@@ -10,11 +10,11 @@ export const dynamic = "force-dynamic";
 export default async function AdminEventsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; deleted?: string }>;
+  searchParams: Promise<{ saved?: string; deleted?: string; error?: string }>;
 }) {
   if (!(await isAuthenticated())) redirect("/admin/login");
 
-  const { saved, deleted } = await searchParams;
+  const { saved, deleted, error } = await searchParams;
   const events = getAllEventsForAdmin();
 
   return (
@@ -23,8 +23,7 @@ export default async function AdminEventsPage({
         <div>
           <h1 className="display text-4xl text-white sm:text-5xl">Events</h1>
           <p className="mt-3 text-white/60">
-            Create events, set capacity and prices, and close bookings when you
-            are full.
+            Create events, set capacity, prices and a payment link per hike.
           </p>
         </div>
         <Link
@@ -34,6 +33,12 @@ export default async function AdminEventsPage({
           + New event
         </Link>
       </div>
+
+      {error === "payment-link" && (
+        <p className="mt-6 rounded-2xl border border-ember/40 bg-ember/10 px-5 py-3 text-sm font-semibold text-ember">
+          Add a payment link on the event before you publish a paid hike.
+        </p>
+      )}
 
       {(saved || deleted) && (
         <p className="mt-6 rounded-2xl border border-forest-400/30 bg-forest-500/15 px-5 py-3 text-sm font-semibold text-forest-300">

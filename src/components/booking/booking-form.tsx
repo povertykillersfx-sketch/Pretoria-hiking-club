@@ -66,7 +66,9 @@ export function BookingForm({ event }: { event: EventWithAvailability }) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(isPaid ? "card" : "free");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
+    isPaid ? (event.paymentLink ? "card" : "eft") : "free",
+  );
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   const [state, formAction] = useActionState(submitBooking, initialState);
@@ -327,33 +329,35 @@ export function BookingForm({ event }: { event: EventWithAvailability }) {
             </div>
 
             <div className="space-y-4">
-              <button
-                type="button"
-                onClick={() => setPaymentMethod("card")}
-                aria-pressed={paymentMethod === "card"}
-                className={cn(
-                  "w-full rounded-3xl border p-5 text-left transition-all duration-300",
-                  paymentMethod === "card"
-                    ? "border-forest-700 bg-forest-900 text-white"
-                    : "border-forest-900/15 bg-white hover:border-forest-600",
-                )}
-              >
-                <span className="flex items-center justify-between gap-4">
-                  <span className="font-display text-lg font-bold tracking-tight">
-                    Pay by card / Yoco
-                  </span>
-                  <span className="text-sm opacity-80">Yoco</span>
-                </span>
-                <span
+              {event.paymentLink ? (
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("card")}
+                  aria-pressed={paymentMethod === "card"}
                   className={cn(
-                    "mt-2 block text-sm",
-                    paymentMethod === "card" ? "text-white/70" : "text-stone",
+                    "w-full rounded-3xl border p-5 text-left transition-all duration-300",
+                    paymentMethod === "card"
+                      ? "border-forest-700 bg-forest-900 text-white"
+                      : "border-forest-900/15 bg-white hover:border-forest-600",
                   )}
                 >
-                  Your spot is held when you confirm. Pay the total on Yoco with
-                  your booking reference.
-                </span>
-              </button>
+                  <span className="flex items-center justify-between gap-4">
+                    <span className="font-display text-lg font-bold tracking-tight">
+                      Pay by card / Yoco
+                    </span>
+                    <span className="text-sm opacity-80">Yoco</span>
+                  </span>
+                  <span
+                    className={cn(
+                      "mt-2 block text-sm",
+                      paymentMethod === "card" ? "text-white/70" : "text-stone",
+                    )}
+                  >
+                    Your spot is held when you confirm. Pay the total on this
+                    hike&apos;s Yoco link with your booking reference.
+                  </span>
+                </button>
+              ) : null}
 
               <button
                 type="button"
@@ -384,15 +388,15 @@ export function BookingForm({ event }: { event: EventWithAvailability }) {
               </button>
             </div>
 
-            {paymentMethod === "card" && (
+            {paymentMethod === "card" && event.paymentLink && (
               <div className="rounded-3xl bg-sand/70 p-5">
-                <PaymentInstructions showEft={false} />
+                <PaymentInstructions payLink={event.paymentLink} showEft={false} />
               </div>
             )}
 
             {paymentMethod === "eft" && (
               <div className="rounded-3xl bg-sand/70 p-5">
-                <PaymentInstructions />
+                <PaymentInstructions payLink={event.paymentLink} />
               </div>
             )}
           </section>

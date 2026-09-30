@@ -28,6 +28,7 @@ export type HikeEvent = {
   distance10km: boolean;
   difficulty: Difficulty;
   priceCents: number;
+  paymentLink: string | null;
   capacity: number;
   image: string;
   gallery: string[];

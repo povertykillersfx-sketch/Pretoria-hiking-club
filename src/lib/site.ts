@@ -14,7 +14,6 @@ export const site = {
   instagramHandle: "@pretoria.hiking.c",
   tiktok: "https://www.tiktok.com/@pretoria.hiking.c",
   tiktokHandle: "@pretoria.hiking.c",
-  payLink: "https://pay.yoco.com/Pretoriahikingclub",
   city: "Pretoria, South Africa",
   bank: {
     accountName: "Pretoria Hiking Club",

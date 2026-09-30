@@ -30,7 +30,7 @@ const faqs = [
   {
     question: "How do I pay?",
     answer:
-      "Pay by card on Yoco after you book, or EFT into our FNB Gold Business Account. Use your booking reference so we can match the payment. Your spot is held either way.",
+      "Pay by card on the Yoco link for that hike after you book, or EFT into our FNB Gold Business Account. Use your booking reference so we can match the payment. Your spot is held either way.",
   },
   {
     question: "Do you do corporate or private group hikes?",

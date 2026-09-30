@@ -108,6 +108,13 @@ export async function sendBookingConfirmation(booking: BookingWithEvent): Promis
         ? `Paid · ${formatPriceExact(booking.amountCents)}`
         : `Payment outstanding · ${formatPriceExact(booking.amountCents)}`;
 
+  const yocoButton =
+    booking.paymentStatus === "pending" && event.paymentLink
+      ? `<p style="margin:0 0 16px;">
+             <a href="${esc(event.paymentLink)}" style="display:inline-block;background:#14512f;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:700;font-size:14px;">Pay with Yoco</a>
+           </p>`
+      : "";
+
   const paymentBlock =
     booking.paymentStatus === "pending"
       ? `<div style="margin-top:24px;padding:18px;border-radius:16px;background:#f8f6f1;">
@@ -115,10 +122,8 @@ export async function sendBookingConfirmation(booking: BookingWithEvent): Promis
            <p style="margin:0 0 14px;font-size:13px;line-height:1.7;color:#3c4a42;">
              Your spot is held. Pay ${esc(formatPriceExact(booking.amountCents))} by card on Yoco or by EFT, using reference <strong>${esc(booking.reference)}</strong>.
            </p>
-           <p style="margin:0 0 16px;">
-             <a href="${site.payLink}" style="display:inline-block;background:#14512f;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:700;font-size:14px;">Pay with Yoco</a>
-           </p>
-           <p style="margin:0 0 6px;font-weight:700;font-size:13px;">Or pay by EFT</p>
+           ${yocoButton}
+           <p style="margin:0 0 6px;font-weight:700;font-size:13px;">${event.paymentLink ? "Or pay by EFT" : "Pay by EFT"}</p>
            <p style="margin:0;font-size:13px;line-height:1.7;color:#3c4a42;">
              ${esc(site.bank.accountName)}<br/>
              ${esc(site.bank.bank)} · Account ${esc(site.bank.accountNumber)}<br/>
@@ -188,7 +193,7 @@ export async function sendBookingConfirmation(booking: BookingWithEvent): Promis
       ? [
           ``,
           `Finish your payment (${formatPriceExact(booking.amountCents)}) using reference ${booking.reference}.`,
-          `Pay with Yoco: ${site.payLink}`,
+          ...(event.paymentLink ? [`Pay with Yoco: ${event.paymentLink}`] : []),
           `Or EFT to ${site.bank.accountName}, ${site.bank.bank}, account ${site.bank.accountNumber}, branch ${site.bank.branchCode}.`,
           `Send proof of payment to ${site.email} at least 48 hours before the event.`,
         ]

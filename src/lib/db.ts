@@ -45,6 +45,7 @@ function migrate(connection: Database.Database) {
       distance_10km INTEGER NOT NULL DEFAULT 1,
       difficulty TEXT NOT NULL DEFAULT 'Moderate',
       price_cents INTEGER NOT NULL DEFAULT 0,
+      payment_link TEXT,
       capacity INTEGER NOT NULL DEFAULT 60,
       image TEXT NOT NULL DEFAULT '/images/event-magaliesberg.jpg',
       gallery TEXT NOT NULL DEFAULT '[]',
@@ -96,6 +97,15 @@ function migrate(connection: Database.Database) {
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_bookings_checkin_token ON bookings(checkin_token) WHERE checkin_token IS NOT NULL",
   );
 
+  const eventColumns = connection
+    .prepare<[], { name: string }>("PRAGMA table_info(events)")
+    .all()
+    .map((column) => column.name);
+
+  if (!eventColumns.includes("payment_link")) {
+    connection.exec("ALTER TABLE events ADD COLUMN payment_link TEXT");
+  }
+
   const missingTokens = connection
     .prepare<[], { id: number }>(
       "SELECT id FROM bookings WHERE checkin_token IS NULL OR checkin_token = ''",
@@ -133,12 +143,12 @@ function seed(connection: Database.Database) {
     INSERT INTO events (
       slug, title, category, summary, description, location, meeting_point, map_url,
       event_date, start_time, arrival_time, end_time, distance_5km, distance_10km,
-      difficulty, price_cents, capacity, image, gallery, schedule, includes, bring,
+      difficulty, price_cents, payment_link, capacity, image, gallery, schedule, includes, bring,
       published, bookings_closed
     ) VALUES (
       @slug, @title, @category, @summary, @description, @location, @meeting_point, @map_url,
       @event_date, @start_time, @arrival_time, @end_time, @distance_5km, @distance_10km,
-      @difficulty, @price_cents, @capacity, @image, @gallery, @schedule, @includes, @bring,
+      @difficulty, @price_cents, @payment_link, @capacity, @image, @gallery, @schedule, @includes, @bring,
       @published, @bookings_closed
     )
   `);
@@ -155,7 +165,11 @@ function seed(connection: Database.Database) {
 
   const run = connection.transaction(() => {
     for (const event of seedEvents()) {
-      const info = insert.run(event.row);
+      const info = insert.run({
+        ...event.row,
+        payment_link:
+          event.row.price_cents > 0 ? `https://pay.yoco.com/phc-${event.row.slug}` : null,
+      });
       const eventId = Number(info.lastInsertRowid);
       for (const booking of event.bookings) {
         insertBooking.run({

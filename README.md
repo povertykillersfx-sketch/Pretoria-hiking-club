@@ -30,8 +30,9 @@ administrator manages events, capacity and attendees from a built-in admin area.
 - Dashboard: upcoming events, booked hikers, open spots, payments received and
   the latest bookings
 - Create and edit events: date, location, meeting point, arrival and start
-  times, 5KM / 10KM options, difficulty, price, capacity, cover photo, gallery
-  photos, per-event schedule, what's included and what to bring
+  times, 5KM / 10KM options, difficulty, price, per-event payment link,
+  capacity, cover photo, gallery photos, per-event schedule, what's included
+  and what to bring
 - Photo uploads straight from the event form, plus a picker for existing photos
 - Publish / unpublish, close / reopen bookings, delete events
 - Attendee list per event with trail split, outstanding Yoco/EFT payments,
@@ -109,27 +110,27 @@ to the console so the booking flow still works end to end locally.
 ## Payments
 
 The booking flow supports two methods. Both confirm the spot immediately and
-leave payment as **pending** until a club administrator marks it paid (Yoco's
-pay link has no webhook on this site).
+leave payment as **pending** until a club administrator marks it paid (Yoco pay
+links have no webhook on this site).
 
-- **Card / Yoco** — after confirming, hikers pay the event total at
-  [pay.yoco.com/Pretoriahikingclub](https://pay.yoco.com/Pretoriahikingclub)
-  using their booking reference.
+- **Card / Yoco** — after confirming, hikers pay on **that event's** payment
+  link (set in admin when you create or edit the hike) using their booking
+  reference. Paid events cannot be published without a link.
 - **EFT** — hikers pay into the club FNB Gold Business Account (`63227120283`,
   branch `250655`) using the booking reference. Proof of payment should be
   emailed at least 48 hours before the event.
 
-Free events skip the payment step entirely. Bank details, the Yoco pay link
-and club contact information live in `src/lib/site.ts`.
+Free events skip the payment step entirely. Bank details and club contact
+information live in `src/lib/site.ts`. Event payment links live on each event.
 
 ## Data model
 
 Two tables, created and migrated on boot in `src/lib/db.ts`:
 
 - `events` — slug, title, category, copy, location, meeting point, date, arrival
-  and start times, 5KM/10KM flags, difficulty, price (cents), capacity, cover
-  photo, gallery, per-event schedule, includes, bring, published and
-  bookings-closed flags
+  and start times, 5KM/10KM flags, difficulty, price (cents), payment link,
+  capacity, cover photo, gallery, per-event schedule, includes, bring, published
+  and bookings-closed flags
 - `bookings` — reference, event, trail distance, name, email, phone, number of
   people, amount (cents), payment method and status, booking status, notes,
   unique check-in token and checked-in timestamp
