@@ -31,7 +31,8 @@ export function LoginForm() {
           type="password"
           name="password"
           required
-          autoComplete="current-password"
+          autoComplete="off"
+          spellCheck={false}
           className="mt-2 w-full rounded-2xl border border-white/15 bg-forest-950/60 px-4 py-3.5 text-white outline-none transition-all placeholder:text-white/30 focus:border-forest-400 focus:ring-4 focus:ring-forest-400/15"
           placeholder="••••••••"
         />

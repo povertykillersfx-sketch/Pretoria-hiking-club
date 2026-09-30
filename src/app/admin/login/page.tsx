@@ -20,10 +20,9 @@ export default async function AdminLoginPage() {
         <LoginForm />
 
         {usingDefaultPassword() && (
-          <p className="mt-6 rounded-2xl bg-white/5 px-4 py-3 text-xs leading-relaxed text-white/50">
-            No <code className="text-forest-300">ADMIN_PASSWORD</code> is set, so
-            the demo password <strong className="text-white">trailboss</strong>{" "}
-            is active. Set the environment variable before going live.
+          <p className="mt-6 rounded-2xl border border-forest-400/30 bg-forest-500/15 px-4 py-3 text-sm leading-relaxed text-white/80">
+            Demo password:{" "}
+            <strong className="font-mono text-white">trailboss</strong>
           </p>
         )}
       </div>

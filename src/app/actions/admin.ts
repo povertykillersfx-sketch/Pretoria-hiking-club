@@ -31,25 +31,26 @@ const MAX_LOGIN_ATTEMPTS = 8;
 let failedLogins: { count: number; firstAt: number } = { count: 0, firstAt: 0 };
 
 export async function login(_prev: LoginState, formData: FormData): Promise<LoginState> {
-  const password = String(formData.get("password") ?? "");
+  const password = String(formData.get("password") ?? "").trim();
   const now = Date.now();
 
   if (now - failedLogins.firstAt > LOGIN_WINDOW_MS) {
     failedLogins = { count: 0, firstAt: now };
   }
 
+  // A correct password always gets in, even after a lockout from earlier misses.
+  if (password && verifyPassword(password)) {
+    failedLogins = { count: 0, firstAt: now };
+    await createSession();
+    redirect("/admin");
+  }
+
   if (failedLogins.count >= MAX_LOGIN_ATTEMPTS) {
     return { error: "Too many attempts. Wait a few minutes and try again." };
   }
 
-  if (!password || !verifyPassword(password)) {
-    failedLogins.count += 1;
-    return { error: "That password is not right. Try again." };
-  }
-
-  failedLogins = { count: 0, firstAt: now };
-  await createSession();
-  redirect("/admin");
+  failedLogins.count += 1;
+  return { error: "That password is not right. Try again." };
 }
 
 export async function logout(): Promise<void> {
