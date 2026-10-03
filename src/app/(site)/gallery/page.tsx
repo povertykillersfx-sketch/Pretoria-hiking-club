@@ -7,7 +7,7 @@ import { ArrowIcon, buttonClasses } from "@/components/ui/button";
 export const metadata: Metadata = {
   title: "Gallery",
   description:
-    "Photos from Pretoria Hiking Club adventures — group hikes, mountain trails, camping weekends, team photos, getaways and socials.",
+    "Photos from Pretoria Hiking Club adventures — group hikes, mountain trails, camping weekends, team photos, getaways, socials and private hikes.",
   alternates: { canonical: "/gallery" },
 };
 
@@ -17,7 +17,7 @@ export default function GalleryPage() {
       <PageHero
         eyebrow="Gallery"
         title="Every trail tells a story"
-        description="Group hikes, mountain trails, nature, camping, team photos, getaways, social activities and scenic views from across South Africa."
+        description="Group hikes, mountain trails, camping, team photos, getaways, socials and private hikes from across South Africa."
         image="/images/gallery-peaks.jpg"
         imageAlt="Hikers on a ridge after a colour-run hike"
         compact

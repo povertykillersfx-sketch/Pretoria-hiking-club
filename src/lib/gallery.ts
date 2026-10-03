@@ -2,7 +2,7 @@ export type GalleryImage = {
   src: string;
   alt: string;
   caption: string;
-  tag: "Group hikes" | "Trails" | "Nature" | "Camping" | "Team" | "Getaways" | "Social";
+  tag: "Group hikes" | "Trails" | "Camping" | "Team" | "Getaways" | "Social" | "Private hikes";
 };
 
 export const galleryImages: GalleryImage[] = [
@@ -76,7 +76,25 @@ export const galleryImages: GalleryImage[] = [
     src: "/images/hero-ridge.jpg",
     alt: "Hikers on a dry hillside with colour powder in their hair",
     caption: "Colour still in the hair",
-    tag: "Nature",
+    tag: "Trails",
+  },
+  {
+    src: "/images/private-hike-warmup.jpg",
+    alt: "A private hike group stretching together on the lawn before the trail",
+    caption: "Warm-up before a private hike",
+    tag: "Private hikes",
+  },
+  {
+    src: "/images/private-hike-breakfast.jpg",
+    alt: "Guests collecting breakfast and fruit cups at a private hike buffet",
+    caption: "Breakfast is included",
+    tag: "Private hikes",
+  },
+  {
+    src: "/images/private-hike-colour.jpg",
+    alt: "Two private-hike guests holding colour powder packets on the grass",
+    caption: "Team-building on the day",
+    tag: "Private hikes",
   },
 ];
 
@@ -84,9 +102,9 @@ export const galleryTags = [
   "All",
   "Group hikes",
   "Trails",
-  "Nature",
   "Camping",
   "Team",
   "Getaways",
   "Social",
+  "Private hikes",
 ] as const;

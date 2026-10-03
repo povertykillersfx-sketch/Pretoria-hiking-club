@@ -6,6 +6,7 @@ import { site } from "@/lib/site";
 const exploreLinks = [
   { href: "/events", label: "Upcoming Events" },
   { href: "/book", label: "Book a Hike" },
+  { href: "/private-hikes", label: "Private Hikes" },
   { href: "/ticket", label: "Find my ticket" },
   { href: "/about", label: "About Us" },
   { href: "/gallery", label: "Gallery" },

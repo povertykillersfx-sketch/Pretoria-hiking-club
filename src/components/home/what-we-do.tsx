@@ -37,6 +37,14 @@ const pillars = [
     href: "/#community",
     cta: "Meet the crew",
   },
+  {
+    emoji: "🎯",
+    title: "Private Hikes",
+    copy: "Book the club for your team, family or friends — breakfast, lunch, games and a guided hike.",
+    image: "/images/private-hike-warmup.jpg",
+    href: "/private-hikes",
+    cta: "See the package",
+  },
 ];
 
 export function WhatWeDo() {
@@ -47,11 +55,11 @@ export function WhatWeDo() {
           tone="light"
           align="center"
           eyebrow="What we do"
-          title="Four ways to get outside with us"
+          title="Ways to get outside with us"
           description="From an easy Saturday morning trail to a week in Cape Town — there is always something on the calendar."
         />
 
-        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {pillars.map((pillar, index) => (
             <Reveal key={pillar.title} delay={index * 90} className="h-full">
               <Link

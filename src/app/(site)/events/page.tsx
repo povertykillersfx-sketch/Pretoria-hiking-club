@@ -25,6 +25,7 @@ const filters: { label: string; value: EventCategory | "all" }[] = [
   { label: "Camping", value: "camping" },
   { label: "Getaways", value: "getaway" },
   { label: "Socials", value: "social" },
+  { label: "Private hikes", value: "private" },
 ];
 
 export default async function EventsPage({
@@ -103,13 +104,15 @@ export default async function EventsPage({
                 Nothing on the calendar in this category yet.
               </p>
               <p className="mt-3 text-stone">
-                New dates drop every month — follow us on Instagram to hear first.
+                {active === "private"
+                  ? "Private hikes are booked by email — tell us your group size and preferred date."
+                  : "New dates drop every month — follow us on Instagram to hear first."}
               </p>
               <Link
-                href="/events"
+                href={active === "private" ? "/private-hikes" : "/events"}
                 className="mt-6 inline-block font-semibold text-forest-700 underline underline-offset-4"
               >
-                See all upcoming events
+                {active === "private" ? "See the private hike package" : "See all upcoming events"}
               </Link>
             </div>
           ) : (

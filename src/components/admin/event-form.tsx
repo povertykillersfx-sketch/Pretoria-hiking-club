@@ -140,6 +140,7 @@ export function EventForm({
               <option value="camping">Camping</option>
               <option value="getaway">Getaway</option>
               <option value="social">Social</option>
+              <option value="private">Private hike</option>
             </select>
           </Label>
           <Label title="Difficulty" error={errors.difficulty}>

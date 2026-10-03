@@ -7,6 +7,7 @@ export const site = {
     "Join 1,000+ hikers exploring some of South Africa's best trails and outdoor experiences. Monthly 5KM and 10KM hikes, camping adventures and getaway weekends from Pretoria.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://pretoriahikingclub.co.za",
   email: "hello@pretoriahikingclub.co.za",
+  bookingEmail: "booking@pretoriahikingclub.co.za",
   phone: "+27 67 986 2379",
   whatsapp: "https://wa.me/27679862379",
   whatsappGroup: "https://chat.whatsapp.com/FyOOtXnCJQpJ588AGtUbKi",

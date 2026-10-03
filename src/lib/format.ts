@@ -85,6 +85,8 @@ export function categoryLabel(category: HikeEvent["category"]): string {
       return "Getaway";
     case "social":
       return "Social";
+    case "private":
+      return "Private hike";
     default:
       return "Hike";
   }

@@ -73,7 +73,7 @@ const scheduleItemSchema = z.object({
 const eventSchema = z.object({
   title: z.string().trim().min(3, "Give the event a title."),
   slug: z.string().trim().optional().or(z.literal("")),
-  category: z.enum(["hike", "camping", "getaway", "social"]),
+  category: z.enum(["hike", "camping", "getaway", "social", "private"]),
   summary: z.string().trim().min(10, "Write a short summary for the event card."),
   description: z.string().trim().min(20, "Add a longer description."),
   location: z.string().trim().min(3, "Where is it?"),

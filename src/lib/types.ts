@@ -1,4 +1,4 @@
-export type EventCategory = "hike" | "camping" | "getaway" | "social";
+export type EventCategory = "hike" | "camping" | "getaway" | "social" | "private";
 
 export type Difficulty = "Easy" | "Moderate" | "Challenging";
 

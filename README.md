@@ -13,7 +13,9 @@ administrator manages events, capacity and attendees from a built-in admin area.
 
 - Homepage with hero, club stats, upcoming events, the standard hike-day
   schedule, what the club does, about, community and an immersive gallery
-- Events index with category filters (hikes, camping, getaways, socials)
+- Events index with category filters (hikes, camping, getaways, socials,
+  private hikes)
+- Private hikes page with package inclusions and a booking email
 - Dedicated event pages with their own programme, what's included, what to
   bring, gallery and a sticky booking card (plus a mobile booking bar)
 - Four-step booking flow: trail distance → details → payment → confirmation
@@ -145,7 +147,7 @@ automatically.
 src/
   app/
     (site)/            public pages: home, events, book, booking, ticket, about,
-                       gallery, contact, legal
+                       gallery, private hikes, contact, legal
     admin/             login, dashboard, event CRUD, attendee lists, QR check-in
     actions/           server actions for bookings, contact, check-in and admin
     api/               CSV export, photo upload, calendar (.ics), QR download
