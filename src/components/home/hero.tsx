@@ -8,7 +8,7 @@ export function Hero() {
     <section className="relative isolate flex min-h-[94svh] flex-col justify-end overflow-hidden bg-forest-950 pb-10 pt-32 sm:pb-14">
       <div className="absolute inset-0 -z-10">
         <Image
-          src="/images/hero-group-hike.jpg"
+          src="/images/hero-home.jpg"
           alt="Pretoria Hiking Club members walking a sunny trail together"
           fill
           priority
