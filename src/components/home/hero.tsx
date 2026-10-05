@@ -9,7 +9,7 @@ export function Hero() {
       <div className="absolute inset-0 -z-10">
         <Image
           src="/images/hero-home.jpg"
-          alt="Pretoria Hiking Club members walking a sunny trail together"
+          alt="Pretoria Hiking Club members crossing a forest stream on a hike"
           fill
           priority
           sizes="100vw"
