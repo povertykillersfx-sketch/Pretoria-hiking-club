@@ -5,7 +5,7 @@ import { supabaseConfigured } from "./supabase";
  * write a local SQLite file or `.data` directory. When Supabase env vars are
  * missing (local preview), an in-memory store is used instead — still no disk.
  */
-export { getSupabase, supabaseConfigured } from "./supabase";
+export { getSupabase, supabaseConfigured, throwSupabaseError } from "./supabase";
 
 export function usingSupabase(): boolean {
   return supabaseConfigured();

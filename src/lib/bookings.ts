@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { getEventById, getEventBySlug, withAvailability } from "./events";
-import { usingSupabase, getSupabase } from "./db";
+import { usingSupabase, getSupabase, throwSupabaseError } from "./db";
 import {
   memoryCheckIn,
   memoryGetBookingByReference,
@@ -81,7 +81,7 @@ async function uniqueReference(): Promise<string> {
         .select("id")
         .eq("reference", reference)
         .maybeSingle();
-      if (error) throw new Error(error.message);
+      if (error) throwSupabaseError(error);
       if (!data) return reference;
     } else if (!(await memoryReferenceTaken(reference))) {
       return reference;
@@ -99,7 +99,7 @@ async function uniqueCheckinToken(): Promise<string> {
         .select("id")
         .or(`checkin_token.eq.${token},qr_payload.eq.${qrPayload(token)}`)
         .maybeSingle();
-      if (error) throw new Error(error.message);
+      if (error) throwSupabaseError(error);
       if (!data) return token;
     } else if (!(await memoryTokenTaken(token))) {
       return token;
@@ -230,7 +230,7 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingW
       return (await hydrateBooking(inserted as BookingRecord))!;
     }
 
-    throw new Error(error.message);
+    throwSupabaseError(error);
   }
 
   return (await hydrateBooking(data as BookingRecord))!;
@@ -245,7 +245,7 @@ export async function getBookingByReference(reference: string): Promise<BookingW
     .eq("reference", reference.toUpperCase())
     .maybeSingle();
 
-  if (error) throw new Error(error.message);
+  if (error) throwSupabaseError(error);
   return hydrateBooking(data as BookingRecord | null);
 }
 
@@ -260,7 +260,7 @@ export async function getBookingByToken(token: string): Promise<BookingWithEvent
     .or(`checkin_token.eq.${cleaned},qr_payload.eq.${cleaned},qr_payload.eq.${qrPayload(cleaned)}`)
     .maybeSingle();
 
-  if (error) throw new Error(error.message);
+  if (error) throwSupabaseError(error);
   return hydrateBooking(data as BookingRecord | null);
 }
 
@@ -299,7 +299,7 @@ export async function searchBookingsForEvent(eventId: number, query: string): Pr
     .or(`reference.ilike.${like},name.ilike.${like},id.eq.${Number.isFinite(Number(term)) ? Number(term) : -1}`)
     .limit(20);
 
-  if (error) throw new Error(error.message);
+  if (error) throwSupabaseError(error);
 
   return (data as BookingRecord[])
     .sort((a, b) => {
@@ -343,7 +343,7 @@ export async function checkInBooking(eventId: number, code: string): Promise<Che
         .select("*")
         .eq("id", parsed.id)
         .maybeSingle();
-      if (error) throw new Error(error.message);
+      if (error) throwSupabaseError(error);
       booking = await hydrateBooking(data as BookingRecord | null);
     } else {
       booking = await memoryGetBookingRecordById(parsed.id);
@@ -409,14 +409,14 @@ export async function checkInBooking(eventId: number, code: string): Promise<Che
         .select("*")
         .maybeSingle();
 
-      if (updateError) throw new Error(updateError.message);
+      if (updateError) throwSupabaseError(updateError);
       const hydrated = await hydrateBooking((updated as BookingRecord | null) ?? null);
       if (!hydrated) {
         return { ok: false, reason: "already_checked_in", message: `${booking.name} is already checked in.`, booking };
       }
       return { ok: true, booking: hydrated };
     }
-    throw new Error(error.message);
+    throwSupabaseError(error);
   }
 
   const hydrated = await hydrateBooking(data as BookingRecord);
@@ -459,7 +459,7 @@ export async function getCheckInStats(eventId: number): Promise<{
     .select("people, status, checked_in_at")
     .eq("event_id", eventId);
 
-  if (error) throw new Error(error.message);
+  if (error) throwSupabaseError(error);
 
   const rows = data ?? [];
   const confirmed = rows.filter((row) => row.status === "confirmed");
@@ -515,7 +515,7 @@ export async function getBookingsForEvent(eventId: number): Promise<Booking[]> {
     .eq("event_id", eventId)
     .order("created_at", { ascending: false });
 
-  if (error) throw new Error(error.message);
+  if (error) throwSupabaseError(error);
   return (data as BookingRecord[]).map(mapBooking);
 }
 
@@ -529,7 +529,7 @@ export async function getRecentBookings(limit = 10): Promise<BookingWithEvent[]>
     .order("id", { ascending: false })
     .limit(limit);
 
-  if (error) throw new Error(error.message);
+  if (error) throwSupabaseError(error);
 
   const rows = (data as BookingRecord[]) ?? [];
   const hydrated = await Promise.all(rows.map((row) => hydrateBooking(row)));
@@ -540,14 +540,14 @@ export async function updateBookingStatus(id: number, status: Booking["status"])
   if (!usingSupabase()) return memoryUpdateBookingStatus(id, status);
 
   const { error } = await getSupabase().from("bookings").update({ status }).eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) throwSupabaseError(error);
 }
 
 export async function updatePaymentStatus(id: number, status: PaymentStatus): Promise<void> {
   if (!usingSupabase()) return memoryUpdatePaymentStatus(id, status);
 
   const { error } = await getSupabase().from("bookings").update({ payment_status: status }).eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) throwSupabaseError(error);
 }
 
 export async function getClubStats() {
@@ -559,7 +559,7 @@ export async function getClubStats() {
   ]);
 
   if (eventError) throw new Error(eventError.message);
-  if (error) throw new Error(error.message);
+  if (error) throwSupabaseError(error);
 
   const confirmed = (data ?? []).filter((row) => row.status === "confirmed");
   return {

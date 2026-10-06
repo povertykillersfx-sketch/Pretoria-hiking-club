@@ -12,7 +12,7 @@ import {
   memoryUpdateEvent,
 } from "./memory-store";
 import { hydrateEvent, todayIso, type EventRecord } from "./records";
-import { getSupabase, usingSupabase } from "./db";
+import { getSupabase, throwSupabaseError, usingSupabase } from "./db";
 import type { EventInput, EventWithAvailability } from "./types";
 
 export type { EventInput } from "./types";
@@ -54,7 +54,7 @@ async function supabaseRows(
   query: PromiseLike<{ data: EventRecord[] | null; error: { message: string } | null }>,
 ): Promise<EventWithAvailability[]> {
   const { data, error } = await query;
-  if (error) throw new Error(error.message);
+  if (error) throwSupabaseError(error);
   return (data ?? []).map((row) => hydrateEvent(row));
 }
 
@@ -103,7 +103,7 @@ export async function getEventBySlug(slug: string): Promise<EventWithAvailabilit
     .eq("slug", slug)
     .maybeSingle();
 
-  if (error) throw new Error(error.message);
+  if (error) throwSupabaseError(error);
   return data ? hydrateEvent(data as EventRecord) : null;
 }
 
@@ -116,7 +116,7 @@ export async function getEventById(id: number): Promise<EventWithAvailability | 
     .eq("id", id)
     .maybeSingle();
 
-  if (error) throw new Error(error.message);
+  if (error) throwSupabaseError(error);
   return data ? hydrateEvent(data as EventRecord) : null;
 }
 
@@ -133,7 +133,7 @@ export async function createEvent(input: EventInput): Promise<number> {
     .select("id")
     .single();
 
-  if (error || data == null) throw new Error(error?.message ?? "Could not create event.");
+  if (error || data == null) throwSupabaseError(error ?? { message: "Could not create event." });
   return Number(data.id);
 }
 
@@ -145,14 +145,14 @@ export async function updateEvent(id: number, input: EventInput): Promise<void> 
     .update({ ...toEventRow(input), updated_at: new Date().toISOString() })
     .eq("id", id);
 
-  if (error) throw new Error(error.message);
+  if (error) throwSupabaseError(error);
 }
 
 export async function deleteEvent(id: number): Promise<void> {
   if (!usingSupabase()) return memoryDeleteEvent(id);
 
   const { error } = await getSupabase().from("events").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) throwSupabaseError(error);
 }
 
 export async function setBookingsClosed(id: number, closed: boolean): Promise<void> {
@@ -163,7 +163,7 @@ export async function setBookingsClosed(id: number, closed: boolean): Promise<vo
     .update({ bookings_closed: closed, updated_at: new Date().toISOString() })
     .eq("id", id);
 
-  if (error) throw new Error(error.message);
+  if (error) throwSupabaseError(error);
 }
 
 export async function setPublished(
@@ -187,7 +187,7 @@ export async function setPublished(
     .update({ published, updated_at: new Date().toISOString() })
     .eq("id", id);
 
-  if (error) throw new Error(error.message);
+  if (error) throwSupabaseError(error);
   return { ok: true };
 }
 
@@ -214,7 +214,7 @@ export async function uniqueSlug(base: string, ignoreId?: number): Promise<strin
             .select("id")
             .eq("slug", candidate)
             .maybeSingle();
-          if (error) throw new Error(error.message);
+          if (error) throwSupabaseError(error);
           return data != null && Number(data.id) !== ignoreId;
         })()
       : await memorySlugTaken(candidate, ignoreId);

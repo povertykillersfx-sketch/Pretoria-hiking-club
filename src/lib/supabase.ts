@@ -11,6 +11,19 @@ export function supabaseConfigured(): boolean {
   );
 }
 
+export function throwSupabaseError(error: { message: string; code?: string }): never {
+  const missing =
+    /schema cache|does not exist|Could not find the table|PGRST205|42P01/i.test(
+      `${error.code ?? ""} ${error.message}`,
+    );
+
+  throw new Error(
+    missing
+      ? "Supabase tables are missing. Run supabase/schema.sql in the SQL editor, then retry."
+      : error.message,
+  );
+}
+
 export function getSupabase(): SupabaseClient {
   if (global.__phcSupabase) return global.__phcSupabase;
 
