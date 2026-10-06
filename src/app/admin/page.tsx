@@ -30,10 +30,10 @@ function StatCard({
 export default async function AdminDashboardPage() {
   if (!(await isAuthenticated())) redirect("/admin/login");
 
-  const events = getAllEventsForAdmin();
+  const events = await getAllEventsForAdmin();
   const upcoming = events.filter((event) => !event.isPast);
-  const stats = getClubStats();
-  const recent = getRecentBookings(8);
+  const stats = await getClubStats();
+  const recent = await getRecentBookings(8);
 
   const spotsLeft = upcoming.reduce((total, event) => total + event.spotsRemaining, 0);
   const soldOut = upcoming.filter((event) => event.soldOut).length;

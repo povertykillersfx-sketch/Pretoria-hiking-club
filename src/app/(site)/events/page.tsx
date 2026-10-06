@@ -38,12 +38,12 @@ export default async function EventsPage({
     ? (category as EventCategory | "all")
     : "all";
 
-  const allUpcoming = getUpcomingEvents();
+  const allUpcoming = await getUpcomingEvents();
   const upcoming =
     active === "all"
       ? allUpcoming
       : allUpcoming.filter((event) => event.category === active);
-  const past = getPastEvents(3);
+  const past = await getPastEvents(3);
 
   const jsonLd = {
     "@context": "https://schema.org",

@@ -75,3 +75,31 @@ export type Booking = {
 export type BookingWithEvent = Booking & {
   event: HikeEvent;
 };
+
+export type EventInput = {
+  slug: string;
+  title: string;
+  category: EventCategory;
+  summary: string;
+  description: string;
+  location: string;
+  meetingPoint: string;
+  mapUrl: string | null;
+  date: string;
+  startTime: string;
+  arrivalTime: string;
+  endTime: string | null;
+  distance5km: boolean;
+  distance10km: boolean;
+  difficulty: Difficulty;
+  priceCents: number;
+  paymentLink: string | null;
+  capacity: number;
+  image: string;
+  gallery: string[];
+  schedule: ScheduleItem[];
+  includes: string[];
+  bring: string[];
+  published: boolean;
+  bookingsClosed: boolean;
+};

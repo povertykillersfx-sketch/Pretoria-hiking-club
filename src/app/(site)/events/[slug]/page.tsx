@@ -28,7 +28,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const event = getEventBySlug(slug);
+  const event = await getEventBySlug(slug);
 
   if (!event) {
     return { title: "Event not found" };
@@ -69,12 +69,12 @@ export default async function EventPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const event = getEventBySlug(slug);
+  const event = await getEventBySlug(slug);
 
   if (!event || !event.published) notFound();
 
   const { day, month } = dateParts(event.date);
-  const others = getUpcomingEvents()
+  const others = (await getUpcomingEvents())
     .filter((item) => item.id !== event.id)
     .slice(0, 3);
 

@@ -45,14 +45,14 @@ administrator manages events, capacity and attendees from a built-in admin area.
 
 **Booking rules that are enforced server-side**
 
-- Capacity is checked inside an immediate SQLite transaction, so the last spot
-  can never be sold twice
+- Capacity is checked in a Postgres row lock (`create_hike_booking`) so the last
+  spot can never be sold twice
 - When an event fills up, "Book Your Spot" is automatically replaced with
   "Sold Out" everywhere (cards, event page, sticky bar, booking page)
 - Past events, unpublished events and manually closed events refuse bookings
-- Each confirmed booking gets a unique check-in token. The QR is valid only for
-  that booking and that hike — a code from a previous event is rejected as
-  invalid for this event
+- Each confirmed booking gets a unique check-in token and QR payload stored on
+  the booking row. The QR is valid only for that booking and that hike — a code
+  from a previous event is rejected as invalid for this event
 - Cancelled bookings and tickets that have already been scanned cannot be
   checked in again
 - Only signed-in club staff can open the check-in desk or mark someone as arrived
@@ -64,8 +64,8 @@ administrator manages events, capacity and attendees from a built-in admin area.
 | Framework | Next.js 16 (App Router, React 19, Server Actions) |
 | Language | TypeScript |
 | Styling | Tailwind CSS v4 |
-| Database | SQLite via `better-sqlite3` |
-| Email | Nodemailer (SMTP), with a local outbox fallback |
+| Database | Supabase (Postgres). In-memory fallback when env vars are missing |
+| Email | Nodemailer (SMTP). Without SMTP, sends are logged rather than written to disk |
 | Validation | Zod |
 
 No client-side state library and no animation library: scroll reveals and the
@@ -78,9 +78,9 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The database is created and
-seeded automatically on first run at `.data/pretoria-hiking-club.db` with eight
-example events (including a sold-out one) and sample bookings.
+Open [http://localhost:3000](http://localhost:3000). Without Supabase env vars
+the app uses an in-memory store seeded with eight example events (including a
+sold-out one) and sample bookings — nothing is written to `.data` or the disk.
 
 The admin area is at [http://localhost:3000/admin](http://localhost:3000/admin).
 The development password is `trailboss` until you set `ADMIN_PASSWORD`.
@@ -104,10 +104,14 @@ optional in development.
 | `ADMIN_EMAIL` | Where new-booking notifications are sent |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE` | SMTP credentials for confirmation emails |
 | `MAIL_FROM` | From address, e.g. `Pretoria Hiking Club <hello@…>` |
-| `PHC_DATA_DIR` | Where the SQLite file and outbox live (default `.data`) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL. **Required on Netlify.** |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-side Supabase key used to insert bookings and QR tokens |
 
-Without SMTP credentials, emails are written to `.data/outbox/*.html` and logged
-to the console so the booking flow still works end to end locally.
+Without SMTP credentials, emails are logged to the console so the booking flow
+still works end to end locally. Booking rows and QR tokens are never written to
+the local filesystem.
+
+Apply `supabase/schema.sql` in the Supabase SQL editor before going live.
 
 ## Payments
 
@@ -127,7 +131,7 @@ information live in `src/lib/site.ts`. Event payment links live on each event.
 
 ## Data model
 
-Two tables, created and migrated on boot in `src/lib/db.ts`:
+Two tables in Supabase (`supabase/schema.sql`):
 
 - `events` — slug, title, category, copy, location, meeting point, date, arrival
   and start times, 5KM/10KM flags, difficulty, price (cents), payment link,
@@ -135,11 +139,12 @@ Two tables, created and migrated on boot in `src/lib/db.ts`:
   and bookings-closed flags
 - `bookings` — reference, event, trail distance, name, email, phone, number of
   people, amount (cents), payment method and status, booking status, notes,
-  unique check-in token and checked-in timestamp
+  unique check-in token, QR payload (`phc1.{token}`) and checked-in timestamp
 
 Spots remaining is always derived from confirmed bookings
 (`capacity − SUM(people)`), so cancellations return spots to the pool
-automatically.
+automatically. `create_hike_booking` locks the event row while inserting so
+capacity cannot be oversold.
 
 ## Project structure
 
@@ -152,7 +157,7 @@ src/
     actions/           server actions for bookings, contact, check-in and admin
     api/               CSV export, photo upload, calendar (.ics), QR download
   components/          UI, homepage sections, booking form, admin form
-  lib/                 db, events, bookings, email, auth, formatting, site config
+  lib/                 supabase client, events, bookings, email, auth, site config
 public/images/         curated outdoor photography
 ```
 
@@ -206,11 +211,11 @@ python3 brand-source/replace-photos.py
 
 ## Deploying
 
-Any Node host works (a small VPS, Fly.io, Railway, Render). Two things to keep
-in mind:
+Netlify (this repo includes `netlify.toml` and `@netlify/plugin-nextjs`) or any
+Node host.
 
-1. **SQLite needs a persistent disk.** Mount a volume and point `PHC_DATA_DIR`
-   at it. On a read-only or ephemeral filesystem (for example a serverless
-   platform) the database and uploaded photos will not survive.
-2. Set `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET` and the SMTP variables before
+1. Create a Supabase project and run `supabase/schema.sql`.
+2. Set `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` on the host.
+   Serverless platforms have no persistent disk — do not use SQLite or `.data`.
+3. Set `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET` and the SMTP variables before
    opening bookings to the public.

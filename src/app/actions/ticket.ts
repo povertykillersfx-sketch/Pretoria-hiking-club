@@ -30,7 +30,7 @@ export async function lookupTicket(
   const raw = parsed.data.reference.trim().toUpperCase();
   const reference = raw.startsWith("PHC-") ? raw : `PHC-${raw}`;
 
-  const booking = lookupHikerTicket(reference, parsed.data.email);
+  const booking = await lookupHikerTicket(reference, parsed.data.email);
   if (!booking) {
     return {
       status: "error",

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BookIndexPage() {
-  const events = getUpcomingEvents();
+  const events = await getUpcomingEvents();
   const open = events.filter((event) => event.bookingOpen);
   const closed = events.filter((event) => !event.bookingOpen);
 

@@ -154,13 +154,13 @@ function parsePaymentLink(
   return { link: url.toString() };
 }
 
-function toEventInput(
+async function toEventInput(
   data: z.infer<typeof eventSchema>,
   paymentLink: string | null,
   id?: number,
-): EventInput {
+): Promise<EventInput> {
   return {
-    slug: uniqueSlug(data.slug?.trim() || data.title, id),
+    slug: await uniqueSlug(data.slug?.trim() || data.title, id),
     title: data.title,
     category: data.category,
     summary: data.summary,
@@ -267,12 +267,12 @@ export async function saveEvent(
     };
   }
 
-  const input = toEventInput(parsed.data, payment.link, id);
+  const input = await toEventInput(parsed.data, payment.link, id);
 
   if (id) {
-    updateEvent(id, input);
+    await updateEvent(id, input);
   } else {
-    createEvent(input);
+    await createEvent(input);
   }
 
   revalidatePath("/");
@@ -286,7 +286,7 @@ export async function toggleBookingsAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = Number(formData.get("id"));
   const closed = formData.get("closed") === "true";
-  setBookingsClosed(id, closed);
+  await setBookingsClosed(id, closed);
   revalidatePath("/admin/events");
   revalidatePath("/events");
   revalidatePath("/");
@@ -296,7 +296,7 @@ export async function togglePublishedAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = Number(formData.get("id"));
   const published = formData.get("published") === "true";
-  const result = setPublished(id, published);
+  const result = await setPublished(id, published);
   if (!result.ok) {
     redirect("/admin/events?error=payment-link");
   }
@@ -307,7 +307,7 @@ export async function togglePublishedAction(formData: FormData): Promise<void> {
 
 export async function deleteEventAction(formData: FormData): Promise<void> {
   await requireAdmin();
-  deleteEvent(Number(formData.get("id")));
+  await deleteEvent(Number(formData.get("id")));
   revalidatePath("/admin/events");
   revalidatePath("/events");
   revalidatePath("/");
@@ -316,14 +316,14 @@ export async function deleteEventAction(formData: FormData): Promise<void> {
 
 export async function markBookingPaidAction(formData: FormData): Promise<void> {
   await requireAdmin();
-  updatePaymentStatus(Number(formData.get("id")), "paid");
+  await updatePaymentStatus(Number(formData.get("id")), "paid");
   revalidatePath(`/admin/events/${formData.get("eventId")}/bookings`);
 }
 
 export async function cancelBookingAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const cancel = formData.get("cancel") === "true";
-  updateBookingStatus(Number(formData.get("id")), cancel ? "cancelled" : "confirmed");
+  await updateBookingStatus(Number(formData.get("id")), cancel ? "cancelled" : "confirmed");
   revalidatePath(`/admin/events/${formData.get("eventId")}/bookings`);
   revalidatePath("/admin/events");
   revalidatePath("/events");

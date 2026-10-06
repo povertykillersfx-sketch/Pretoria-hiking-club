@@ -16,12 +16,12 @@ export default async function EventBookingsPage({
   if (!(await isAuthenticated())) redirect("/admin/login");
 
   const { id } = await params;
-  const event = getEventById(Number(id));
+  const event = await getEventById(Number(id));
 
   if (!event) notFound();
 
-  const bookings = getBookingsForEvent(event.id);
-  const stats = getCheckInStats(event.id);
+  const bookings = await getBookingsForEvent(event.id);
+  const stats = await getCheckInStats(event.id);
   const confirmed = bookings.filter((booking) => booking.status === "confirmed");
   const outstanding = confirmed.filter((booking) => booking.paymentStatus === "pending");
   const fiveKm = confirmed

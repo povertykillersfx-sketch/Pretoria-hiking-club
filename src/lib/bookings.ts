@@ -1,6 +1,24 @@
 import { randomBytes } from "node:crypto";
-import { getDb } from "./db";
 import { getEventById, getEventBySlug, withAvailability } from "./events";
+import { usingSupabase, getSupabase } from "./db";
+import {
+  memoryCheckIn,
+  memoryGetBookingByReference,
+  memoryGetBookingByToken,
+  memoryGetBookingRecordById,
+  memoryGetBookingsForEvent,
+  memoryGetCheckInStats,
+  memoryGetClubStats,
+  memoryGetRecentBookings,
+  memoryInsertBooking,
+  memoryReferenceTaken,
+  memorySearchBookingsForEvent,
+  memoryTokenTaken,
+  memoryUpdateBookingStatus,
+  memoryUpdatePaymentStatus,
+} from "./memory-store";
+import { mapBooking, type BookingRecord } from "./records";
+import { qrPayload } from "./qr";
 import type {
   Booking,
   BookingWithEvent,
@@ -8,46 +26,6 @@ import type {
   PaymentStatus,
   TrailDistance,
 } from "./types";
-
-type BookingRow = {
-  id: number;
-  reference: string;
-  event_id: number;
-  distance: string;
-  name: string;
-  email: string;
-  phone: string;
-  people: number;
-  amount_cents: number;
-  payment_method: string;
-  payment_status: string;
-  status: string;
-  notes: string | null;
-  created_at: string;
-  checkin_token: string | null;
-  checked_in_at: string | null;
-};
-
-function mapBooking(row: BookingRow): Booking {
-  return {
-    id: row.id,
-    reference: row.reference,
-    eventId: row.event_id,
-    distance: row.distance as TrailDistance,
-    name: row.name,
-    email: row.email,
-    phone: row.phone,
-    people: row.people,
-    amountCents: row.amount_cents,
-    paymentMethod: row.payment_method as PaymentMethod,
-    paymentStatus: row.payment_status as PaymentStatus,
-    status: row.status as Booking["status"],
-    notes: row.notes,
-    createdAt: row.created_at,
-    checkinToken: row.checkin_token ?? "",
-    checkedInAt: row.checked_in_at,
-  };
-}
 
 function generateReference(): string {
   const raw = randomBytes(4).toString("hex").toUpperCase();
@@ -78,165 +56,259 @@ export type CreateBookingInput = {
   notes?: string | null;
 };
 
-export function createBooking(input: CreateBookingInput): BookingWithEvent {
-  const db = getDb();
-
-  const run = db.transaction((data: CreateBookingInput): BookingRow => {
-    const event = getEventBySlug(data.eventSlug);
-    if (!event) throw new BookingError("not_found", "That event could not be found.");
-    if (event.isPast) throw new BookingError("closed", "This event has already taken place.");
-    if (!event.published || event.bookingsClosed) {
-      throw new BookingError("closed", "Bookings for this hike are closed.");
-    }
-    if (data.people < 1 || data.people > 10) {
-      throw new BookingError("invalid", "You can book between 1 and 10 spots at a time.");
-    }
-    if (data.distance === "5KM" && !event.distance5km) {
-      throw new BookingError("invalid", "The 5KM route is not available for this event.");
-    }
-    if (data.distance === "10KM" && !event.distance10km) {
-      throw new BookingError("invalid", "The 10KM route is not available for this event.");
-    }
-    if (data.people > event.spotsRemaining) {
-      throw new BookingError(
-        "sold_out",
-        event.spotsRemaining === 0
-          ? "This hike is fully booked."
-          : `Only ${event.spotsRemaining} ${event.spotsRemaining === 1 ? "spot is" : "spots are"} left for this hike.`,
-      );
-    }
-
-    const isFree = event.priceCents === 0;
-    const amountCents = event.priceCents * data.people;
-    const paymentMethod: PaymentMethod = isFree ? "free" : data.paymentMethod;
-    // Card (Yoco) and EFT both confirm the spot immediately. Payment is marked
-    // paid once staff see it land, because Yoco's pay link has no webhook here.
-    const paymentStatus: PaymentStatus = isFree ? "not_required" : "pending";
-
-    let reference = generateReference();
-    while (
-      db
-        .prepare<[string], { id: number }>("SELECT id FROM bookings WHERE reference = ?")
-        .get(reference)
-    ) {
-      reference = generateReference();
-    }
-
-    let token = generateCheckinToken();
-    while (
-      db
-        .prepare<[string], { id: number }>("SELECT id FROM bookings WHERE checkin_token = ?")
-        .get(token)
-    ) {
-      token = generateCheckinToken();
-    }
-
-    const info = db
-      .prepare(
-        `INSERT INTO bookings (
-           reference, event_id, distance, name, email, phone, people,
-           amount_cents, payment_method, payment_status, status, notes, checkin_token
-         ) VALUES (
-           @reference, @event_id, @distance, @name, @email, @phone, @people,
-           @amount_cents, @payment_method, @payment_status, 'confirmed', @notes, @checkin_token
-         )`,
-      )
-      .run({
-        reference,
-        event_id: event.id,
-        distance: data.distance,
-        name: data.name.trim(),
-        email: data.email.trim().toLowerCase(),
-        phone: data.phone.trim(),
-        people: data.people,
-        amount_cents: amountCents,
-        payment_method: paymentMethod,
-        payment_status: paymentStatus,
-        notes: data.notes?.trim() || null,
-        checkin_token: token,
-      });
-
-    return db
-      .prepare<[number], BookingRow>("SELECT * FROM bookings WHERE id = ?")
-      .get(Number(info.lastInsertRowid))!;
-  });
-
-  // An immediate transaction takes the write lock before the capacity check, so
-  // two people booking the last spots at the same time can never oversell it.
-  const row = run.immediate(input);
-  const event = getEventById(row.event_id)!;
-
-  return { ...mapBooking(row), event };
+function bookingErrorFromMessage(message: string): BookingError | null {
+  if (message.includes("sold_out")) {
+    return new BookingError("sold_out", "This hike is fully booked.");
+  }
+  if (message.includes("closed")) {
+    return new BookingError("closed", "Bookings for this hike are closed.");
+  }
+  if (message.includes("not_found")) {
+    return new BookingError("not_found", "That event could not be found.");
+  }
+  if (message.includes("invalid")) {
+    return new BookingError("invalid", "That booking is not valid for this event.");
+  }
+  return null;
 }
 
-export function getBookingByReference(reference: string): BookingWithEvent | null {
-  const row = getDb()
-    .prepare<[string], BookingRow>("SELECT * FROM bookings WHERE reference = ?")
-    .get(reference.toUpperCase());
-
-  return hydrateBooking(row);
+async function uniqueReference(): Promise<string> {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const reference = generateReference();
+    if (usingSupabase()) {
+      const { data, error } = await getSupabase()
+        .from("bookings")
+        .select("id")
+        .eq("reference", reference)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      if (!data) return reference;
+    } else if (!(await memoryReferenceTaken(reference))) {
+      return reference;
+    }
+  }
+  return generateReference();
 }
 
-export function getBookingByToken(token: string): BookingWithEvent | null {
-  const cleaned = token.trim().toLowerCase();
-  if (!cleaned) return null;
-
-  const row = getDb()
-    .prepare<[string], BookingRow>("SELECT * FROM bookings WHERE checkin_token = ?")
-    .get(cleaned);
-
-  return hydrateBooking(row);
+async function uniqueCheckinToken(): Promise<string> {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const token = generateCheckinToken();
+    if (usingSupabase()) {
+      const { data, error } = await getSupabase()
+        .from("bookings")
+        .select("id")
+        .or(`checkin_token.eq.${token},qr_payload.eq.${qrPayload(token)}`)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      if (!data) return token;
+    } else if (!(await memoryTokenTaken(token))) {
+      return token;
+    }
+  }
+  return generateCheckinToken();
 }
 
-function hydrateBooking(row: BookingRow | undefined): BookingWithEvent | null {
+async function hydrateBooking(row: BookingRecord | null | undefined): Promise<BookingWithEvent | null> {
   if (!row) return null;
-  const event = getEventById(row.event_id);
+  const event = await getEventById(Number(row.event_id));
   if (!event) return null;
   return { ...mapBooking(row), event };
 }
 
-export function lookupHikerTicket(reference: string, email: string): BookingWithEvent | null {
-  const booking = getBookingByReference(reference);
+export async function createBooking(input: CreateBookingInput): Promise<BookingWithEvent> {
+  const event = await getEventBySlug(input.eventSlug);
+  if (!event) throw new BookingError("not_found", "That event could not be found.");
+  if (event.isPast) throw new BookingError("closed", "This event has already taken place.");
+  if (!event.published || event.bookingsClosed) {
+    throw new BookingError("closed", "Bookings for this hike are closed.");
+  }
+  if (input.people < 1 || input.people > 10) {
+    throw new BookingError("invalid", "You can book between 1 and 10 spots at a time.");
+  }
+  if (input.distance === "5KM" && !event.distance5km) {
+    throw new BookingError("invalid", "The 5KM route is not available for this event.");
+  }
+  if (input.distance === "10KM" && !event.distance10km) {
+    throw new BookingError("invalid", "The 10KM route is not available for this event.");
+  }
+  if (input.people > event.spotsRemaining) {
+    throw new BookingError(
+      "sold_out",
+      event.spotsRemaining === 0
+        ? "This hike is fully booked."
+        : `Only ${event.spotsRemaining} ${event.spotsRemaining === 1 ? "spot is" : "spots are"} left for this hike.`,
+    );
+  }
+
+  const isFree = event.priceCents === 0;
+  const amountCents = event.priceCents * input.people;
+  const paymentMethod: PaymentMethod = isFree ? "free" : input.paymentMethod;
+  const paymentStatus: PaymentStatus = isFree ? "not_required" : "pending";
+  const reference = await uniqueReference();
+  const token = await uniqueCheckinToken();
+  const payload = qrPayload(token);
+  const name = input.name.trim();
+  const email = input.email.trim().toLowerCase();
+  const phone = input.phone.trim();
+  const notes = input.notes?.trim() || null;
+
+  if (!usingSupabase()) {
+    try {
+      const created = await memoryInsertBooking({
+        reference,
+        event_id: event.id,
+        distance: input.distance,
+        name,
+        email,
+        phone,
+        people: input.people,
+        amount_cents: amountCents,
+        payment_method: paymentMethod,
+        payment_status: paymentStatus,
+        status: "confirmed",
+        notes,
+        checkin_token: token,
+        qr_payload: payload,
+        checked_in_at: null,
+      });
+      return (await hydrateBooking(created))!;
+    } catch (error) {
+      const mapped = bookingErrorFromMessage(error instanceof Error ? error.message : "");
+      if (mapped) throw mapped;
+      throw error;
+    }
+  }
+
+  const { data, error } = await getSupabase()
+    .rpc("create_hike_booking", {
+      p_event_slug: input.eventSlug,
+      p_distance: input.distance,
+      p_name: name,
+      p_email: email,
+      p_phone: phone,
+      p_people: input.people,
+      p_amount_cents: amountCents,
+      p_payment_method: paymentMethod,
+      p_payment_status: paymentStatus,
+      p_notes: notes,
+      p_reference: reference,
+      p_checkin_token: token,
+      p_qr_payload: payload,
+    })
+    .maybeSingle();
+
+  if (error) {
+    const mapped = bookingErrorFromMessage(error.message);
+    if (mapped) throw mapped;
+
+    // RPC missing (schema not applied yet): insert the row directly.
+    if (error.message.toLowerCase().includes("could not find the function")) {
+      const { data: inserted, error: insertError } = await getSupabase()
+        .from("bookings")
+        .insert({
+          reference,
+          event_id: event.id,
+          distance: input.distance,
+          name,
+          email,
+          phone,
+          people: input.people,
+          amount_cents: amountCents,
+          payment_method: paymentMethod,
+          payment_status: paymentStatus,
+          status: "confirmed",
+          notes,
+          checkin_token: token,
+          qr_payload: payload,
+        })
+        .select("*")
+        .single();
+
+      if (insertError) {
+        throw bookingErrorFromMessage(insertError.message) ?? new Error(insertError.message);
+      }
+      return (await hydrateBooking(inserted as BookingRecord))!;
+    }
+
+    throw new Error(error.message);
+  }
+
+  return (await hydrateBooking(data as BookingRecord))!;
+}
+
+export async function getBookingByReference(reference: string): Promise<BookingWithEvent | null> {
+  if (!usingSupabase()) return memoryGetBookingByReference(reference);
+
+  const { data, error } = await getSupabase()
+    .from("bookings")
+    .select("*")
+    .eq("reference", reference.toUpperCase())
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return hydrateBooking(data as BookingRecord | null);
+}
+
+export async function getBookingByToken(token: string): Promise<BookingWithEvent | null> {
+  const cleaned = token.trim().toLowerCase();
+  if (!cleaned) return null;
+  if (!usingSupabase()) return memoryGetBookingByToken(cleaned);
+
+  const { data, error } = await getSupabase()
+    .from("bookings")
+    .select("*")
+    .or(`checkin_token.eq.${cleaned},qr_payload.eq.${cleaned},qr_payload.eq.${qrPayload(cleaned)}`)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return hydrateBooking(data as BookingRecord | null);
+}
+
+export async function lookupHikerTicket(
+  reference: string,
+  email: string,
+): Promise<BookingWithEvent | null> {
+  const booking = await getBookingByReference(reference);
   if (!booking) return null;
   if (booking.email !== email.trim().toLowerCase()) return null;
   return booking;
 }
 
-export function searchBookingsForEvent(eventId: number, query: string): Booking[] {
+export async function searchBookingsForEvent(eventId: number, query: string): Promise<Booking[]> {
   const term = query.trim();
   if (term.length < 2) return [];
 
   const parsed = parseCheckInCode(term);
   if (parsed?.token) {
-    const row = getDb()
-      .prepare<[string, number], BookingRow>(
-        "SELECT * FROM bookings WHERE checkin_token = ? AND event_id = ?",
-      )
-      .get(parsed.token, eventId);
-    return row ? [mapBooking(row)] : [];
+    const booking = await getBookingByToken(parsed.token);
+    return booking && booking.eventId === eventId ? [booking] : [];
   }
 
-  const safe = term.replace(/[%_]/g, "");
+  const safe = term.replace(/[%_,]/g, "");
   if (safe.length < 2) return [];
 
-  const like = `%${safe}%`;
+  if (!usingSupabase()) {
+    return memorySearchBookingsForEvent(eventId, safe, term);
+  }
 
-  return getDb()
-    .prepare<[number, string, string, string, string], BookingRow>(
-      `SELECT * FROM bookings
-       WHERE event_id = ?
-         AND (
-           reference LIKE ? COLLATE NOCASE
-           OR name LIKE ? COLLATE NOCASE
-           OR CAST(id AS TEXT) = ?
-         )
-       ORDER BY
-         CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END,
-         CASE WHEN CAST(id AS TEXT) = ? THEN 0 ELSE 1 END,
-         name COLLATE NOCASE
-       LIMIT 20`,
-    )
-    .all(eventId, like, like, term, term)
+  const like = `%${safe}%`;
+  const { data, error } = await getSupabase()
+    .from("bookings")
+    .select("*")
+    .eq("event_id", eventId)
+    .or(`reference.ilike.${like},name.ilike.${like},id.eq.${Number.isFinite(Number(term)) ? Number(term) : -1}`)
+    .limit(20);
+
+  if (error) throw new Error(error.message);
+
+  return (data as BookingRecord[])
+    .sort((a, b) => {
+      const cancel = Number(a.status === "cancelled") - Number(b.status === "cancelled");
+      if (cancel !== 0) return cancel;
+      const idMatch = Number(String(a.id) !== term) - Number(String(b.id) !== term);
+      if (idMatch !== 0) return idMatch;
+      return a.name.localeCompare(b.name);
+    })
     .map(mapBooking);
 }
 
@@ -255,53 +327,72 @@ export type CheckInResult =
       booking?: BookingWithEvent;
     };
 
-export function checkInBooking(eventId: number, code: string): CheckInResult {
-  const db = getDb();
+export async function checkInBooking(eventId: number, code: string): Promise<CheckInResult> {
+  const parsed = parseCheckInCode(code);
+  if (!parsed) {
+    return { ok: false, reason: "not_found", message: "This QR code is not a valid booking." };
+  }
 
-  const run = db.transaction((payload: { eventId: number; code: string }): CheckInResult => {
-    const parsed = parseCheckInCode(payload.code);
-    if (!parsed) {
-      return { ok: false, reason: "not_found", message: "This QR code is not a valid booking." };
-    }
-
-    let row: BookingRow | undefined;
-    if (parsed.token) {
-      row = db.prepare<[string], BookingRow>("SELECT * FROM bookings WHERE checkin_token = ?").get(parsed.token);
-    } else if (parsed.reference) {
-      row = db
-        .prepare<[string], BookingRow>("SELECT * FROM bookings WHERE reference = ?")
-        .get(parsed.reference);
-    } else if (parsed.id != null) {
-      row = db.prepare<[number], BookingRow>("SELECT * FROM bookings WHERE id = ?").get(parsed.id);
+  let booking: BookingWithEvent | null = null;
+  if (parsed.token) booking = await getBookingByToken(parsed.token);
+  else if (parsed.reference) booking = await getBookingByReference(parsed.reference);
+  else if (parsed.id != null) {
+    if (usingSupabase()) {
+      const { data, error } = await getSupabase()
+        .from("bookings")
+        .select("*")
+        .eq("id", parsed.id)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      booking = await hydrateBooking(data as BookingRecord | null);
     } else {
-      return { ok: false, reason: "not_found", message: "This QR code is not a valid booking." };
+      booking = await memoryGetBookingRecordById(parsed.id);
     }
+  }
 
-    const booking = hydrateBooking(row);
-    if (!booking) {
-      return { ok: false, reason: "not_found", message: "This QR code is not a valid booking." };
-    }
+  if (!booking) {
+    return { ok: false, reason: "not_found", message: "This QR code is not a valid booking." };
+  }
 
-    if (booking.status === "cancelled") {
-      return {
-        ok: false,
-        reason: "cancelled",
-        message: "This booking was cancelled and cannot be checked in.",
-        booking,
-      };
-    }
+  if (booking.status === "cancelled") {
+    return {
+      ok: false,
+      reason: "cancelled",
+      message: "This booking was cancelled and cannot be checked in.",
+      booking,
+    };
+  }
 
-    if (booking.eventId !== payload.eventId) {
-      const date = formatDateSafe(booking.event.date);
-      return {
-        ok: false,
-        reason: "wrong_event",
-        message: `Invalid for this event. This ticket is for ${booking.event.title} on ${date}.`,
-        booking,
-      };
-    }
+  if (booking.eventId !== eventId) {
+    const date = formatDateSafe(booking.event.date);
+    return {
+      ok: false,
+      reason: "wrong_event",
+      message: `Invalid for this event. This ticket is for ${booking.event.title} on ${date}.`,
+      booking,
+    };
+  }
 
-    if (booking.checkedInAt) {
+  if (booking.checkedInAt) {
+    return {
+      ok: false,
+      reason: "already_checked_in",
+      message: `${booking.name} is already checked in.`,
+      booking,
+    };
+  }
+
+  if (!usingSupabase()) {
+    const updated = await memoryCheckIn(booking.id);
+    return { ok: true, booking: (await hydrateBooking(updated))! };
+  }
+
+  const { data, error } = await getSupabase()
+    .rpc("check_in_hike_booking", { p_booking_id: booking.id })
+    .maybeSingle();
+
+  if (error) {
+    if (error.message.includes("already_checked_in")) {
       return {
         ok: false,
         reason: "already_checked_in",
@@ -309,16 +400,36 @@ export function checkInBooking(eventId: number, code: string): CheckInResult {
         booking,
       };
     }
+    if (error.message.toLowerCase().includes("could not find the function")) {
+      const { data: updated, error: updateError } = await getSupabase()
+        .from("bookings")
+        .update({ checked_in_at: new Date().toISOString() })
+        .eq("id", booking.id)
+        .is("checked_in_at", null)
+        .select("*")
+        .maybeSingle();
 
-    db.prepare("UPDATE bookings SET checked_in_at = datetime('now') WHERE id = ?").run(booking.id);
-    const updated = hydrateBooking(
-      db.prepare<[number], BookingRow>("SELECT * FROM bookings WHERE id = ?").get(booking.id),
-    )!;
+      if (updateError) throw new Error(updateError.message);
+      const hydrated = await hydrateBooking((updated as BookingRecord | null) ?? null);
+      if (!hydrated) {
+        return { ok: false, reason: "already_checked_in", message: `${booking.name} is already checked in.`, booking };
+      }
+      return { ok: true, booking: hydrated };
+    }
+    throw new Error(error.message);
+  }
 
-    return { ok: true, booking: updated };
-  });
+  const hydrated = await hydrateBooking(data as BookingRecord);
+  if (hydrated?.checkedInAt && hydrated.checkedInAt === booking.checkedInAt) {
+    return {
+      ok: false,
+      reason: "already_checked_in",
+      message: `${booking.name} is already checked in.`,
+      booking: hydrated,
+    };
+  }
 
-  return run.immediate({ eventId, code });
+  return { ok: true, booking: hydrated! };
 }
 
 function formatDateSafe(iso: string): string {
@@ -335,37 +446,29 @@ function formatDateSafe(iso: string): string {
   }
 }
 
-export function getCheckInStats(eventId: number): {
+export async function getCheckInStats(eventId: number): Promise<{
   confirmed: number;
   hikers: number;
   checkedInBookings: number;
   checkedInHikers: number;
-} {
-  const row = getDb()
-    .prepare<
-      [number],
-      {
-        confirmed: number;
-        hikers: number;
-        checked_in_bookings: number;
-        checked_in_hikers: number;
-      }
-    >(
-      `SELECT
-         COALESCE(SUM(CASE WHEN status = 'confirmed' THEN 1 ELSE 0 END), 0) AS confirmed,
-         COALESCE(SUM(CASE WHEN status = 'confirmed' THEN people ELSE 0 END), 0) AS hikers,
-         COALESCE(SUM(CASE WHEN status = 'confirmed' AND checked_in_at IS NOT NULL THEN 1 ELSE 0 END), 0) AS checked_in_bookings,
-         COALESCE(SUM(CASE WHEN status = 'confirmed' AND checked_in_at IS NOT NULL THEN people ELSE 0 END), 0) AS checked_in_hikers
-       FROM bookings
-       WHERE event_id = ?`,
-    )
-    .get(eventId)!;
+}> {
+  if (!usingSupabase()) return memoryGetCheckInStats(eventId);
 
+  const { data, error } = await getSupabase()
+    .from("bookings")
+    .select("people, status, checked_in_at")
+    .eq("event_id", eventId);
+
+  if (error) throw new Error(error.message);
+
+  const rows = data ?? [];
+  const confirmed = rows.filter((row) => row.status === "confirmed");
+  const checked = confirmed.filter((row) => row.checked_in_at);
   return {
-    confirmed: row.confirmed,
-    hikers: row.hikers,
-    checkedInBookings: row.checked_in_bookings,
-    checkedInHikers: row.checked_in_hikers,
+    confirmed: confirmed.length,
+    hikers: confirmed.reduce((total, row) => total + Number(row.people), 0),
+    checkedInBookings: checked.length,
+    checkedInHikers: checked.reduce((total, row) => total + Number(row.people), 0),
   };
 }
 
@@ -403,61 +506,68 @@ export function parseCheckInCode(raw: string): ParsedCheckInCode | null {
   return null;
 }
 
-export function getBookingsForEvent(eventId: number): Booking[] {
-  return getDb()
-    .prepare<[number], BookingRow>(
-      "SELECT * FROM bookings WHERE event_id = ? ORDER BY created_at DESC",
-    )
-    .all(eventId)
-    .map(mapBooking);
+export async function getBookingsForEvent(eventId: number): Promise<Booking[]> {
+  if (!usingSupabase()) return memoryGetBookingsForEvent(eventId);
+
+  const { data, error } = await getSupabase()
+    .from("bookings")
+    .select("*")
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data as BookingRecord[]).map(mapBooking);
 }
 
-export function getRecentBookings(limit = 10): BookingWithEvent[] {
-  const rows = getDb()
-    .prepare<[number], BookingRow>(
-      "SELECT * FROM bookings ORDER BY created_at DESC, id DESC LIMIT ?",
-    )
-    .all(limit);
+export async function getRecentBookings(limit = 10): Promise<BookingWithEvent[]> {
+  if (!usingSupabase()) return memoryGetRecentBookings(limit);
 
-  return rows.flatMap((row) => {
-    const event = getEventById(row.event_id);
-    return event ? [{ ...mapBooking(row), event }] : [];
-  });
+  const { data, error } = await getSupabase()
+    .from("bookings")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+
+  const rows = (data as BookingRecord[]) ?? [];
+  const hydrated = await Promise.all(rows.map((row) => hydrateBooking(row)));
+  return hydrated.filter((row): row is BookingWithEvent => row != null);
 }
 
-export function updateBookingStatus(
-  id: number,
-  status: Booking["status"],
-): void {
-  getDb().prepare("UPDATE bookings SET status = ? WHERE id = ?").run(status, id);
+export async function updateBookingStatus(id: number, status: Booking["status"]): Promise<void> {
+  if (!usingSupabase()) return memoryUpdateBookingStatus(id, status);
+
+  const { error } = await getSupabase().from("bookings").update({ status }).eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
-export function updatePaymentStatus(id: number, status: PaymentStatus): void {
-  getDb()
-    .prepare("UPDATE bookings SET payment_status = ? WHERE id = ?")
-    .run(status, id);
+export async function updatePaymentStatus(id: number, status: PaymentStatus): Promise<void> {
+  if (!usingSupabase()) return memoryUpdatePaymentStatus(id, status);
+
+  const { error } = await getSupabase().from("bookings").update({ payment_status: status }).eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
-export function getClubStats() {
-  const db = getDb();
-  const hikers = db
-    .prepare<[], { total: number | null }>(
-      "SELECT SUM(people) AS total FROM bookings WHERE status = 'confirmed'",
-    )
-    .get()!;
-  const events = db
-    .prepare<[], { total: number }>("SELECT COUNT(*) AS total FROM events")
-    .get()!;
-  const revenue = db
-    .prepare<[], { total: number | null }>(
-      "SELECT SUM(amount_cents) AS total FROM bookings WHERE status = 'confirmed' AND payment_status = 'paid'",
-    )
-    .get()!;
+export async function getClubStats() {
+  if (!usingSupabase()) return memoryGetClubStats();
 
+  const [{ count, error: eventError }, { data, error }] = await Promise.all([
+    getSupabase().from("events").select("*", { count: "exact", head: true }),
+    getSupabase().from("bookings").select("people, amount_cents, status, payment_status"),
+  ]);
+
+  if (eventError) throw new Error(eventError.message);
+  if (error) throw new Error(error.message);
+
+  const confirmed = (data ?? []).filter((row) => row.status === "confirmed");
   return {
-    bookedHikers: hikers.total ?? 0,
-    totalEvents: events.total,
-    paidRevenueCents: revenue.total ?? 0,
+    bookedHikers: confirmed.reduce((total, row) => total + Number(row.people), 0),
+    totalEvents: count ?? 0,
+    paidRevenueCents: confirmed
+      .filter((row) => row.payment_status === "paid")
+      .reduce((total, row) => total + Number(row.amount_cents), 0),
   };
 }
 
@@ -486,8 +596,6 @@ export function bookingsToCsv(
 
   const escape = (value: string | number | null) => {
     let text = value === null || value === undefined ? "" : String(value);
-    // Spreadsheets treat a leading =, +, - or @ as a formula, so a hiker could put
-    // one in their name or notes. Prefix a quote to keep it inert text.
     if (/^[=+\-@\t\r]/.test(text)) {
       text = `'${text}`;
     }

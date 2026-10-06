@@ -1,14 +1,7 @@
-import fs from "node:fs";
-import path from "node:path";
 import nodemailer from "nodemailer";
 import { formatDate, formatPriceExact, trailLabel } from "./format";
 import { site } from "./site";
 import type { BookingWithEvent } from "./types";
-
-const OUTBOX_DIR = path.join(
-  process.env.PHC_DATA_DIR ? path.resolve(process.env.PHC_DATA_DIR) : path.join(process.cwd(), ".data"),
-  "outbox",
-);
 
 type Mail = {
   to: string;
@@ -38,14 +31,9 @@ async function deliver(mail: Mail): Promise<void> {
 
   // No SMTP credentials configured: write the message to a local outbox so that
   // the booking flow still works in development and nothing is silently lost.
-  fs.mkdirSync(OUTBOX_DIR, { recursive: true });
-  const filename = `${Date.now()}-${mail.to.replace(/[^a-z0-9]+/gi, "-")}.html`;
-  fs.writeFileSync(
-    path.join(OUTBOX_DIR, filename),
-    `<!-- To: ${mail.to} | Subject: ${mail.subject} -->\n${mail.html}`,
-    "utf8",
+  console.info(
+    `[email] SMTP not configured — skipped send "${mail.subject}" to ${mail.to}. Set SMTP_* to deliver mail.`,
   );
-  console.info(`[email] SMTP not configured — wrote "${mail.subject}" to .data/outbox/${filename}`);
 }
 
 function layout(title: string, body: string): string {

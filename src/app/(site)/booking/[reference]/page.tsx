@@ -23,7 +23,7 @@ export default async function BookingConfirmationPage({
   params: Promise<{ reference: string }>;
 }) {
   const { reference } = await params;
-  const booking = getBookingByReference(reference);
+  const booking = await getBookingByReference(reference);
 
   if (!booking) notFound();
 
