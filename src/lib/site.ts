@@ -32,12 +32,12 @@ export const clubStats = [
   { value: "1,000+", label: "Hikers" },
   { value: "5KM & 10KM", label: "Trails" },
   { value: "1–2", label: "Hikes every month" },
-  { value: "All ages", label: "Welcome" },
+  { value: "16+", label: "Welcome" },
 ];
 
 export const communityStats = [
   { value: "1,000+", label: "Hikers" },
   { value: "5KM & 10KM", label: "Trails" },
   { value: "12+", label: "Events every year" },
-  { value: "All ages", label: "Welcome" },
+  { value: "16+", label: "Welcome" },
 ];

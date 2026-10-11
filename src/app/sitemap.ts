@@ -4,7 +4,7 @@ import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = [
     { path: "", priority: 1, changeFrequency: "daily" as const },
     { path: "/events", priority: 0.95, changeFrequency: "daily" as const },
@@ -21,7 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   let events: MetadataRoute.Sitemap = [];
 
   try {
-    events = getUpcomingEvents().map((event) => ({
+    events = (await getUpcomingEvents()).map((event) => ({
       url: `${site.url}/events/${event.slug}`,
       lastModified: new Date(event.updatedAt),
       changeFrequency: "weekly" as const,

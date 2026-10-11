@@ -4,26 +4,34 @@ import { site } from "@/lib/site";
 export function PaymentInstructions({
   reference,
   payLink,
+  checkoutUrl,
+  amountLabel,
   showEft = true,
 }: {
   reference?: string;
   payLink?: string | null;
+  checkoutUrl?: string | null;
+  amountLabel?: string;
   showEft?: boolean;
 }) {
+  const yocoUrl = checkoutUrl || payLink;
+
   return (
     <div className="space-y-4">
-      {payLink ? (
+      {yocoUrl ? (
         <>
           <a
-            href={payLink}
+            href={yocoUrl}
             target="_blank"
             rel="noreferrer noopener"
             className={buttonClasses("primary", "md", "w-full")}
           >
-            Pay with Yoco
+            {amountLabel ? `Pay ${amountLabel} with Yoco` : "Pay with Yoco"}
           </a>
           <p className="text-sm text-forest-900/70">
-            Pay the event total on this hike&apos;s Yoco link
+            {checkoutUrl
+              ? `Card checkout is charged for ${amountLabel ?? "your ticket total"}`
+              : "Pay the event total on this hike's Yoco link"}
             {reference ? (
               <>
                 {" "}
@@ -39,7 +47,7 @@ export function PaymentInstructions({
       {showEft ? (
         <div className="rounded-3xl bg-sand/70 p-5 text-sm text-forest-900/80">
           <p className="font-display text-base font-bold tracking-tight text-forest-900">
-            {payLink ? "Or pay by EFT" : "Pay by EFT"}
+            {yocoUrl ? "Or pay by EFT" : "Pay by EFT"}
           </p>
           <p className="mt-2 leading-relaxed">
             {site.bank.accountName}

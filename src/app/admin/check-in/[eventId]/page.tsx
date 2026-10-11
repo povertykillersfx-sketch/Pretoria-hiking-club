@@ -16,10 +16,10 @@ export default async function CheckInEventPage({
   if (!(await isAuthenticated())) redirect("/admin/login");
 
   const { eventId } = await params;
-  const event = getEventById(Number(eventId));
+  const event = await getEventById(Number(eventId));
   if (!event) notFound();
 
-  const stats = getCheckInStats(event.id);
+  const stats = await getCheckInStats(event.id);
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-12">

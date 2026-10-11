@@ -20,7 +20,7 @@ const faqs = [
   {
     question: "Can I bring my kids or my parents?",
     answer:
-      "Yes. All ages are welcome. The 5KM route suits most families — just let us know in the notes when you book so we can plan for the group.",
+      "Hikers need to be 16 or older. The 5KM route suits most first-timers — just let us know in the notes when you book so we can plan for the group.",
   },
   {
     question: "What happens if it rains?",
@@ -30,7 +30,7 @@ const faqs = [
   {
     question: "How do I pay?",
     answer:
-      "Pay by card on the Yoco link for that hike after you book, or EFT into our FNB Gold Business Account. Use your booking reference so we can match the payment. Your spot is held either way.",
+      "The booking page shows a read-only total (tickets × hike price). Pay that amount by card on Yoco or EFT into our FNB Gold Business Account. Use your booking reference so we can match the payment. Your QR code unlocks when the charge succeeds.",
   },
   {
     question: "Do you do corporate or private group hikes?",

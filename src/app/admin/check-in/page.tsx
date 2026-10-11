@@ -8,8 +8,8 @@ import type { EventWithAvailability } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-function EventRow({ event }: { event: EventWithAvailability }) {
-  const stats = getCheckInStats(event.id);
+async function EventRow({ event }: { event: EventWithAvailability }) {
+  const stats = await getCheckInStats(event.id);
 
   return (
     <li className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-white/10 bg-white/5 px-5 py-4">
@@ -36,7 +36,7 @@ function EventRow({ event }: { event: EventWithAvailability }) {
 export default async function CheckInPickerPage() {
   if (!(await isAuthenticated())) redirect("/admin/login");
 
-  const events = getAllEventsForAdmin();
+  const events = await getAllEventsForAdmin();
   const upcoming = events.filter((event) => !event.isPast);
   const past = events.filter((event) => event.isPast).slice().reverse();
 

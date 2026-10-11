@@ -73,7 +73,7 @@ async function requireStaff(): Promise<void> {
 
 export async function submitCheckIn(eventId: number, code: string): Promise<CheckInView> {
   await requireStaff();
-  const result = checkInBooking(eventId, code);
+  const result = await checkInBooking(eventId, code);
   revalidatePath("/admin/check-in");
   revalidatePath(`/admin/check-in/${eventId}`);
   revalidatePath(`/admin/events/${eventId}/bookings`);
@@ -82,7 +82,7 @@ export async function submitCheckIn(eventId: number, code: string): Promise<Chec
 
 export async function searchCheckIn(eventId: number, query: string): Promise<SearchHit[]> {
   await requireStaff();
-  return searchBookingsForEvent(eventId, query).map((booking) => ({
+  return (await searchBookingsForEvent(eventId, query)).map((booking) => ({
     id: booking.id,
     name: booking.name,
     reference: booking.reference,

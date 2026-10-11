@@ -15,7 +15,7 @@ export default async function AdminEventsPage({
   if (!(await isAuthenticated())) redirect("/admin/login");
 
   const { saved, deleted, error } = await searchParams;
-  const events = getAllEventsForAdmin();
+  const events = await getAllEventsForAdmin();
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">

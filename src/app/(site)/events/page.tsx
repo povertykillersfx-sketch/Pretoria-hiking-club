@@ -7,6 +7,7 @@ import { Reveal } from "@/components/reveal";
 import { cn } from "@/lib/cn";
 import { getPastEvents, getUpcomingEvents } from "@/lib/events";
 import { formatDate } from "@/lib/format";
+import { absoluteMediaUrl } from "@/lib/media";
 import { site } from "@/lib/site";
 import type { EventCategory } from "@/lib/types";
 
@@ -38,12 +39,12 @@ export default async function EventsPage({
     ? (category as EventCategory | "all")
     : "all";
 
-  const allUpcoming = getUpcomingEvents();
+  const allUpcoming = await getUpcomingEvents();
   const upcoming =
     active === "all"
       ? allUpcoming
       : allUpcoming.filter((event) => event.category === active);
-  const past = getPastEvents(3);
+  const past = await getPastEvents(3);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -62,7 +63,7 @@ export default async function EventsPage({
           address: event.location,
         },
         url: `${site.url}/events/${event.slug}`,
-        image: `${site.url}${event.image}`,
+        image: absoluteMediaUrl(event.image),
       },
     })),
   };

@@ -6,7 +6,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { saveEvent, type EventFormState } from "@/app/actions/admin";
 import { cn } from "@/lib/cn";
-import { DEFAULT_SCHEDULE } from "@/lib/seed-data";
+import { DEFAULT_SCHEDULE, STANDARD_BRING } from "@/lib/seed-data";
 import type { EventWithAvailability, ScheduleItem } from "@/lib/types";
 
 const initialState: EventFormState = { status: "idle" };
@@ -299,16 +299,20 @@ export function EventForm({
       <Section title="Photos">
         <div>
           <p className="font-display text-sm font-bold tracking-tight text-white">Cover photo</p>
+          <p className="mt-1 text-xs text-white/45">
+            Upload a cover from your phone or computer, or tap an existing photo below.
+          </p>
           <div className="mt-3 flex flex-wrap items-start gap-4">
             <div className="relative h-28 w-44 overflow-hidden rounded-2xl border border-white/15">
               <Image src={image} alt="Selected cover" fill sizes="11rem" className="object-cover" />
             </div>
             <label className="cursor-pointer rounded-full border border-white/20 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white hover:text-forest-950">
-              {uploading ? "Uploading…" : "Upload new photo"}
+              {uploading ? "Uploading…" : "Upload from device"}
               <input
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/avif"
+                accept="image/jpeg,image/png,image/webp,image/avif,image/*"
                 className="hidden"
+                disabled={uploading}
                 onChange={(changeEvent) => {
                   const file = changeEvent.target.files?.[0];
                   if (file) void upload(file, "cover");
@@ -356,14 +360,16 @@ export function EventForm({
               </span>
             ))}
             <label className="cursor-pointer rounded-full border border-white/20 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white hover:text-forest-950">
-              + Add photo
+              + Add from device
               <input
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/avif"
+                accept="image/jpeg,image/png,image/webp,image/avif,image/*"
                 className="hidden"
+                disabled={uploading}
+                multiple
                 onChange={(changeEvent) => {
-                  const file = changeEvent.target.files?.[0];
-                  if (file) void upload(file, "gallery");
+                  const files = Array.from(changeEvent.target.files ?? []);
+                  for (const file of files) void upload(file, "gallery");
                   changeEvent.target.value = "";
                 }}
               />
@@ -465,9 +471,9 @@ export function EventForm({
           <textarea
             name="bring"
             rows={5}
-            defaultValue={event?.bring.join("\n")}
+            defaultValue={(event?.bring.length ? event.bring : STANDARD_BRING).join("\n")}
             className={input}
-            placeholder={"2 litres of water\nSunscreen and a hat"}
+            placeholder={STANDARD_BRING.join("\n")}
           />
         </Label>
       </Section>

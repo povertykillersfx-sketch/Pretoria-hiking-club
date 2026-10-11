@@ -63,13 +63,17 @@ const standardIncludes = [
   "First aid support on the trail",
 ];
 
-const standardBring = [
-  "Comfortable hiking shoes or trainers",
+export const STANDARD_BRING = [
+  "Comfortable sportswear",
+  "Powerbank",
+  "Personal medication, if needed",
   "At least 2 litres of water",
   "Sunscreen, hat and a light jacket",
   "Snacks, breakfast and lunch",
   "A fully charged phone for the group photos",
 ];
+
+const standardBring = STANDARD_BRING;
 
 function booking(
   reference: string,

@@ -17,7 +17,7 @@ export async function GET(
   { params }: { params: Promise<{ reference: string }> },
 ) {
   const { reference } = await params;
-  const booking = getBookingByReference(reference);
+  const booking = await getBookingByReference(reference);
 
   if (!booking) {
     return new Response("Booking not found", { status: 404 });

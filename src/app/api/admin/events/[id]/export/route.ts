@@ -11,13 +11,13 @@ export async function GET(
   }
 
   const { id } = await params;
-  const event = getEventById(Number(id));
+  const event = await getEventById(Number(id));
 
   if (!event) {
     return new Response("Event not found", { status: 404 });
   }
 
-  const csv = bookingsToCsv(getBookingsForEvent(event.id), event.title, event.date);
+  const csv = bookingsToCsv(await getBookingsForEvent(event.id), event.title, event.date);
 
   return new Response(csv, {
     headers: {

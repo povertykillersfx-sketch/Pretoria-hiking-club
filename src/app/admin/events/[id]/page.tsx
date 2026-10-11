@@ -16,7 +16,7 @@ export default async function EditEventPage({
   if (!(await isAuthenticated())) redirect("/admin/login");
 
   const { id } = await params;
-  const event = getEventById(Number(id));
+  const event = await getEventById(Number(id));
 
   if (!event) notFound();
 
@@ -54,7 +54,7 @@ export default async function EditEventPage({
       </div>
 
       <div className="mt-10">
-        <EventForm event={event} library={getImageLibrary()} />
+        <EventForm event={event} library={await getImageLibrary()} />
       </div>
 
       <form

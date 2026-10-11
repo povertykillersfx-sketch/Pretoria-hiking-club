@@ -10,6 +10,7 @@ import { StickyBookBar } from "@/components/sticky-book-bar";
 import { ArrowIcon, buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { getEventBySlug, getUpcomingEvents } from "@/lib/events";
+import { absoluteMediaUrl } from "@/lib/media";
 import {
   categoryLabel,
   dateParts,
@@ -28,7 +29,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const event = getEventBySlug(slug);
+  const event = await getEventBySlug(slug);
 
   if (!event) {
     return { title: "Event not found" };
@@ -69,12 +70,12 @@ export default async function EventPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const event = getEventBySlug(slug);
+  const event = await getEventBySlug(slug);
 
   if (!event || !event.published) notFound();
 
   const { day, month } = dateParts(event.date);
-  const others = getUpcomingEvents()
+  const others = (await getUpcomingEvents())
     .filter((item) => item.id !== event.id)
     .slice(0, 3);
 
@@ -88,7 +89,7 @@ export default async function EventPage({
       ? "https://schema.org/EventScheduled"
       : "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    image: [`${site.url}${event.image}`],
+    image: [absoluteMediaUrl(event.image)],
     location: {
       "@type": "Place",
       name: event.meetingPoint,

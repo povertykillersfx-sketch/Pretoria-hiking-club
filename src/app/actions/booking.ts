@@ -59,7 +59,7 @@ export async function submitBooking(
   let reference: string;
 
   try {
-    const booking = createBooking({
+    const booking = await createBooking({
       eventSlug: parsed.data.eventSlug,
       distance: parsed.data.distance,
       name: parsed.data.name,

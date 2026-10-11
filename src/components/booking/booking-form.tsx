@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { submitBooking, type BookingFormState } from "@/app/actions/booking";
+import { BookingTotal } from "@/components/booking/booking-total";
 import { PaymentInstructions } from "@/components/booking/payment-instructions";
 import { ArrowIcon, buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
-import { availableDistances, formatDate, formatPrice, formatPriceExact } from "@/lib/format";
+import { availableDistances, computeBookingTotalCents, formatDate, formatPrice, formatPriceExact } from "@/lib/format";
 import type { EventWithAvailability, PaymentMethod, TrailDistance } from "@/lib/types";
 
 const initialState: BookingFormState = { status: "idle" };
@@ -84,7 +85,7 @@ export function BookingForm({ event }: { event: EventWithAvailability }) {
     [isPaid],
   );
 
-  const total = event.priceCents * people;
+  const total = computeBookingTotalCents(event.priceCents, people);
   const maxPeople = Math.min(10, event.spotsRemaining);
 
   const errors = { ...state.fieldErrors, ...localErrors };
@@ -257,6 +258,7 @@ export function BookingForm({ event }: { event: EventWithAvailability }) {
                 </span>
               </div>
             </Field>
+            {isPaid ? <BookingTotal priceCents={event.priceCents} quantity={people} /> : null}
           </div>
         </section>
 
@@ -322,11 +324,10 @@ export function BookingForm({ event }: { event: EventWithAvailability }) {
             <div>
               <h2 className="display text-2xl sm:text-3xl">Payment</h2>
               <p className="mt-2 text-sm text-stone">
-                {formatPrice(event.priceCents)} × {people}{" "}
-                {people === 1 ? "person" : "people"} ={" "}
-                <strong className="text-forest-900">{formatPriceExact(total)}</strong>
+                Review the read-only total before you continue to checkout.
               </p>
             </div>
+            <BookingTotal priceCents={event.priceCents} quantity={people} />
 
             <div className="space-y-4">
               {event.paymentLink ? (

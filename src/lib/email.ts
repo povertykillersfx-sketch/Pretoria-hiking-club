@@ -1,14 +1,7 @@
-import fs from "node:fs";
-import path from "node:path";
 import nodemailer from "nodemailer";
 import { formatDate, formatPriceExact, trailLabel } from "./format";
 import { site } from "./site";
 import type { BookingWithEvent } from "./types";
-
-const OUTBOX_DIR = path.join(
-  process.env.PHC_DATA_DIR ? path.resolve(process.env.PHC_DATA_DIR) : path.join(process.cwd(), ".data"),
-  "outbox",
-);
 
 type Mail = {
   to: string;
@@ -38,14 +31,9 @@ async function deliver(mail: Mail): Promise<void> {
 
   // No SMTP credentials configured: write the message to a local outbox so that
   // the booking flow still works in development and nothing is silently lost.
-  fs.mkdirSync(OUTBOX_DIR, { recursive: true });
-  const filename = `${Date.now()}-${mail.to.replace(/[^a-z0-9]+/gi, "-")}.html`;
-  fs.writeFileSync(
-    path.join(OUTBOX_DIR, filename),
-    `<!-- To: ${mail.to} | Subject: ${mail.subject} -->\n${mail.html}`,
-    "utf8",
+  console.info(
+    `[email] SMTP not configured — skipped send "${mail.subject}" to ${mail.to}. Set SMTP_* to deliver mail.`,
   );
-  console.info(`[email] SMTP not configured — wrote "${mail.subject}" to .data/outbox/${filename}`);
 }
 
 function layout(title: string, body: string): string {
@@ -120,7 +108,7 @@ export async function sendBookingConfirmation(booking: BookingWithEvent): Promis
       ? `<div style="margin-top:24px;padding:18px;border-radius:16px;background:#f8f6f1;">
            <p style="margin:0 0 8px;font-weight:700;font-size:14px;">Finish your payment</p>
            <p style="margin:0 0 14px;font-size:13px;line-height:1.7;color:#3c4a42;">
-             Your spot is held. Pay ${esc(formatPriceExact(booking.amountCents))} by card on Yoco or by EFT, using reference <strong>${esc(booking.reference)}</strong>.
+             Your spot is held. Pay ${esc(formatPriceExact(booking.amountCents))} by card on Yoco or by EFT, using reference <strong>${esc(booking.reference)}</strong>. Your QR code unlocks automatically after a successful charge.
            </p>
            ${yocoButton}
            <p style="margin:0 0 6px;font-weight:700;font-size:13px;">${event.paymentLink ? "Or pay by EFT" : "Pay by EFT"}</p>
@@ -147,7 +135,11 @@ export async function sendBookingConfirmation(booking: BookingWithEvent): Promis
   const html = layout(
     "You're booked! 🥾",
     `<p style="margin:0 0 20px;font-size:15px;line-height:1.7;">Hi ${esc(booking.name.split(" ")[0])},</p>
-     <p style="margin:0 0 24px;font-size:15px;line-height:1.7;">Your spot on <strong>${esc(event.title)}</strong> is confirmed. Save this email — you will need your QR code at check-in on the day.</p>
+     <p style="margin:0 0 24px;font-size:15px;line-height:1.7;">Your spot on <strong>${esc(event.title)}</strong> is confirmed. ${
+       booking.paymentStatus === "pending"
+         ? "Your check-in QR unlocks as soon as Yoco confirms payment."
+         : "Save this email — you will need your QR code at check-in on the day."
+     }</p>
      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
        ${detailRow("Booking reference", booking.reference)}
        ${detailRow("Event", event.title)}

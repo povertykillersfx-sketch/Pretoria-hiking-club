@@ -12,7 +12,7 @@ import { site } from "@/lib/site";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const events = getUpcomingEvents(6);
+  const events = await getUpcomingEvents(6);
 
   const organisation = {
     "@context": "https://schema.org",
