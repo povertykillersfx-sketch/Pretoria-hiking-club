@@ -61,6 +61,12 @@ export function formatPriceExact(cents: number): string {
   })}`;
 }
 
+export function computeBookingTotalCents(priceCents: number, quantity: number): number {
+  const safeQuantity = Number.isFinite(quantity) ? Math.max(0, Math.floor(quantity)) : 0;
+  const safePrice = Number.isFinite(priceCents) ? Math.max(0, Math.floor(priceCents)) : 0;
+  return safeQuantity * safePrice;
+}
+
 export function trailLabel(event: Pick<HikeEvent, "distance5km" | "distance10km">): string {
   if (event.distance5km && event.distance10km) return "5KM & 10KM";
   if (event.distance5km) return "5KM";

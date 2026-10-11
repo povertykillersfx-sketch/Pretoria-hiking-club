@@ -106,6 +106,8 @@ optional in development.
 | `MAIL_FROM` | From address, e.g. `Pretoria Hiking Club <hello@…>` |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL. **Required on Netlify.** |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-side Supabase key used to insert bookings and QR tokens |
+| `YOCO_SECRET_KEY` | Yoco Checkout secret key (`sk_live_…`). Used to create per-booking checkouts |
+| `YOCO_WEBHOOK_SECRET` | Yoco webhook signing secret (`whsec_…`). Required to accept `/webhooks/payments` |
 
 Without SMTP credentials, emails are logged to the console so the booking flow
 still works end to end locally. Booking rows and QR tokens are never written to
@@ -115,19 +117,26 @@ Apply `supabase/schema.sql` in the Supabase SQL editor before going live.
 
 ## Payments
 
-The booking flow supports two methods. Both confirm the spot immediately and
-leave payment as **pending** until a club administrator marks it paid (Yoco pay
-links have no webhook on this site).
+The booking form multiplies ticket quantity by the hike price and shows a
+read-only total before checkout. Paid bookings stay **pending** until Yoco
+confirms the charge (or a club administrator marks EFT as paid). The check-in
+QR stays locked until then.
 
-- **Card / Yoco** — after confirming, hikers pay on **that event's** payment
-  link (set in admin when you create or edit the hike) using their booking
-  reference. Paid events cannot be published without a link.
+- **Card / Yoco** — `POST /webhooks/payments` verifies the Yoco signature, looks
+  for a successful charge (`payment.succeeded` / `payment.created`), matches the
+  booking reference, and marks the order paid. When `YOCO_SECRET_KEY` is set the
+  confirmation page also creates a Checkout for the exact ticket total
+  (quantity × price) with `metadata.bookingReference`.
 - **EFT** — hikers pay into the club FNB Gold Business Account (`63227120283`,
   branch `250655`) using the booking reference. Proof of payment should be
   emailed at least 48 hours before the event.
 
+Set `YOCO_SECRET_KEY` and `YOCO_WEBHOOK_SECRET` on the host, then register
+`https://your-domain/webhooks/payments` in the Yoco app. The webhook signing
+secret is shown only once.
+
 Free events skip the payment step entirely. Bank details and club contact
-information live in `src/lib/site.ts`. Event payment links live on each event.
+information live in `src/lib/site.ts`. Event payment links remain as a fallback.
 
 ## Data model
 
@@ -156,6 +165,7 @@ src/
     admin/             login, dashboard, event CRUD, attendee lists, QR check-in
     actions/           server actions for bookings, contact, check-in and admin
     api/               CSV export, photo upload, calendar (.ics), QR download
+    webhooks/          Yoco payment webhook (`POST /webhooks/payments`)
   components/          UI, homepage sections, booking form, admin form
   lib/                 supabase client, events, bookings, email, auth, site config
 public/images/         curated outdoor photography

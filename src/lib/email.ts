@@ -108,7 +108,7 @@ export async function sendBookingConfirmation(booking: BookingWithEvent): Promis
       ? `<div style="margin-top:24px;padding:18px;border-radius:16px;background:#f8f6f1;">
            <p style="margin:0 0 8px;font-weight:700;font-size:14px;">Finish your payment</p>
            <p style="margin:0 0 14px;font-size:13px;line-height:1.7;color:#3c4a42;">
-             Your spot is held. Pay ${esc(formatPriceExact(booking.amountCents))} by card on Yoco or by EFT, using reference <strong>${esc(booking.reference)}</strong>.
+             Your spot is held. Pay ${esc(formatPriceExact(booking.amountCents))} by card on Yoco or by EFT, using reference <strong>${esc(booking.reference)}</strong>. Your QR code unlocks automatically after a successful charge.
            </p>
            ${yocoButton}
            <p style="margin:0 0 6px;font-weight:700;font-size:13px;">${event.paymentLink ? "Or pay by EFT" : "Pay by EFT"}</p>
@@ -135,7 +135,11 @@ export async function sendBookingConfirmation(booking: BookingWithEvent): Promis
   const html = layout(
     "You're booked! 🥾",
     `<p style="margin:0 0 20px;font-size:15px;line-height:1.7;">Hi ${esc(booking.name.split(" ")[0])},</p>
-     <p style="margin:0 0 24px;font-size:15px;line-height:1.7;">Your spot on <strong>${esc(event.title)}</strong> is confirmed. Save this email — you will need your QR code at check-in on the day.</p>
+     <p style="margin:0 0 24px;font-size:15px;line-height:1.7;">Your spot on <strong>${esc(event.title)}</strong> is confirmed. ${
+       booking.paymentStatus === "pending"
+         ? "Your check-in QR unlocks as soon as Yoco confirms payment."
+         : "Save this email — you will need your QR code at check-in on the day."
+     }</p>
      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
        ${detailRow("Booking reference", booking.reference)}
        ${detailRow("Event", event.title)}

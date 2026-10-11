@@ -550,6 +550,25 @@ export async function updatePaymentStatus(id: number, status: PaymentStatus): Pr
   if (error) throwSupabaseError(error);
 }
 
+export function isQrUnlocked(booking: Pick<Booking, "status" | "paymentStatus">): boolean {
+  if (booking.status === "cancelled") return false;
+  return booking.paymentStatus === "paid" || booking.paymentStatus === "not_required";
+}
+
+export async function markBookingPaidByReference(
+  reference: string,
+): Promise<BookingWithEvent | null> {
+  const booking = await getBookingByReference(reference);
+  if (!booking) return null;
+  if (booking.status === "cancelled") return booking;
+  if (booking.paymentStatus === "paid" || booking.paymentStatus === "not_required") {
+    return booking;
+  }
+
+  await updatePaymentStatus(booking.id, "paid");
+  return (await getBookingByReference(booking.reference)) ?? { ...booking, paymentStatus: "paid" };
+}
+
 export async function getClubStats() {
   if (!usingSupabase()) return memoryGetClubStats();
 

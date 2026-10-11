@@ -5,10 +5,12 @@ import { notFound } from "next/navigation";
 import { ArriveOnTimeNotice, ScheduleTimeline } from "@/components/schedule-timeline";
 import { TicketQr } from "@/components/booking/ticket-qr";
 import { PaymentInstructions } from "@/components/booking/payment-instructions";
+import { PaymentUnlockPoller } from "@/components/booking/payment-unlock-poller";
 import { ArrowIcon, buttonClasses } from "@/components/ui/button";
-import { getBookingByReference } from "@/lib/bookings";
+import { getBookingByReference, isQrUnlocked } from "@/lib/bookings";
 import { formatDate, formatPriceExact, trailLabel } from "@/lib/format";
 import { site, whatsappShareUrl } from "@/lib/site";
+import { createYocoCheckout } from "@/lib/yoco";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +30,14 @@ export default async function BookingConfirmationPage({
   if (!booking) notFound();
 
   const { event } = booking;
+  const qrReady = isQrUnlocked(booking);
+  const checkoutUrl =
+    booking.paymentStatus === "pending" && booking.paymentMethod === "card"
+      ? await createYocoCheckout(booking).catch((error) => {
+          console.error("[yoco] checkout", error);
+          return null;
+        })
+      : null;
   const shareMessage = `I just booked ${event.title} with ${site.name} on ${formatDate(event.date)}. Join me! ${site.url}/events/${event.slug}`;
 
   return (
@@ -115,14 +125,23 @@ export default async function BookingConfirmationPage({
                   this is a mistake.
                 </p>
               </div>
-            ) : (
+            ) : qrReady ? (
               <div className="mt-6 lg:hidden">
                 <TicketQr token={booking.checkinToken} reference={booking.reference} />
+              </div>
+            ) : (
+              <div className="mt-6 rounded-4xl border border-forest-900/10 bg-white p-6 lg:hidden">
+                <p className="eyebrow text-forest-600">Check-in QR locked</p>
+                <p className="mt-2 text-sm text-stone">
+                  Your QR code unlocks as soon as Yoco confirms the payment for
+                  this booking.
+                </p>
               </div>
             )}
 
             {booking.paymentStatus === "pending" && (
               <div className="mt-6 rounded-4xl border border-ember/40 bg-ember/10 p-6">
+                <PaymentUnlockPoller reference={booking.reference} />
                 <h3 className="font-display text-lg font-bold tracking-tight text-forest-950">
                   Finish your payment
                 </h3>
@@ -130,11 +149,15 @@ export default async function BookingConfirmationPage({
                   Your spot is held. Pay {formatPriceExact(booking.amountCents)}{" "}
                   by card on Yoco or by EFT, using reference{" "}
                   <strong className="text-forest-950">{booking.reference}</strong>.
+                  This page unlocks your QR automatically after a successful
+                  charge.
                 </p>
                 <div className="mt-5">
                   <PaymentInstructions
                     reference={booking.reference}
                     payLink={event.paymentLink}
+                    checkoutUrl={checkoutUrl}
+                    amountLabel={formatPriceExact(booking.amountCents)}
                   />
                 </div>
                 <p className="mt-4 text-sm text-forest-900/70">
@@ -177,9 +200,17 @@ export default async function BookingConfirmationPage({
           </div>
 
           <aside className="space-y-6 lg:sticky lg:top-28 lg:self-start">
-            {booking.status !== "cancelled" && booking.checkinToken ? (
+            {booking.status !== "cancelled" && booking.checkinToken && qrReady ? (
               <div className="hidden lg:block">
                 <TicketQr token={booking.checkinToken} reference={booking.reference} />
+              </div>
+            ) : booking.status !== "cancelled" && !qrReady ? (
+              <div className="hidden rounded-4xl border border-forest-900/10 bg-white p-6 lg:block">
+                <p className="eyebrow text-forest-600">Check-in QR locked</p>
+                <p className="mt-2 text-sm text-stone">
+                  Pay {formatPriceExact(booking.amountCents)} to unlock your QR
+                  code for {event.title}.
+                </p>
               </div>
             ) : null}
             <div className="overflow-hidden rounded-4xl border border-forest-900/10 bg-white">
