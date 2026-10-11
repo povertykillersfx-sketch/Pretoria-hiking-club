@@ -6,7 +6,7 @@ import { ArrowIcon, buttonClasses } from "@/components/ui/button";
 
 const highlights = [
   { value: "Every level", label: "From first-timers to trail runners" },
-  { value: "18 – 65+", label: "All ages hike with us" },
+  { value: "16+", label: "Minimum age" },
   { value: "Weekend", label: "Hikes, camps and getaways" },
 ];
 
@@ -31,7 +31,7 @@ export function AboutClub() {
               </p>
               <p>
                 <strong className="font-semibold text-forest-900">
-                  All ages and all experience levels are welcome.
+                  Hikers 16+ and all experience levels are welcome.
                 </strong>{" "}
                 If you can walk 5KM, you can hike with us. Our trail leaders set
                 the pace, our sweepers make sure nobody is alone at the back, and

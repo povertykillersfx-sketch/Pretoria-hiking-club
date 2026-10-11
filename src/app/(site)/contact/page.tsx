@@ -20,7 +20,7 @@ const faqs = [
   {
     question: "Can I bring my kids or my parents?",
     answer:
-      "Yes. All ages are welcome. The 5KM route suits most families — just let us know in the notes when you book so we can plan for the group.",
+      "Hikers need to be 16 or older. The 5KM route suits most first-timers — just let us know in the notes when you book so we can plan for the group.",
   },
   {
     question: "What happens if it rains?",

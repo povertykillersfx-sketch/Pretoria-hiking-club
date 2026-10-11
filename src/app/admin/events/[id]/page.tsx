@@ -54,7 +54,7 @@ export default async function EditEventPage({
       </div>
 
       <div className="mt-10">
-        <EventForm event={event} library={getImageLibrary()} />
+        <EventForm event={event} library={await getImageLibrary()} />
       </div>
 
       <form

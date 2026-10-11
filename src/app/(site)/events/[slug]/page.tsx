@@ -10,6 +10,7 @@ import { StickyBookBar } from "@/components/sticky-book-bar";
 import { ArrowIcon, buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { getEventBySlug, getUpcomingEvents } from "@/lib/events";
+import { absoluteMediaUrl } from "@/lib/media";
 import {
   categoryLabel,
   dateParts,
@@ -88,7 +89,7 @@ export default async function EventPage({
       ? "https://schema.org/EventScheduled"
       : "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    image: [`${site.url}${event.image}`],
+    image: [absoluteMediaUrl(event.image)],
     location: {
       "@type": "Place",
       name: event.meetingPoint,

@@ -2,7 +2,7 @@ import Image from "next/image";
 import { Reveal } from "@/components/reveal";
 import { ArriveOnTimeNotice, ScheduleTimeline } from "@/components/schedule-timeline";
 import { SectionHeading } from "@/components/section-heading";
-import { DEFAULT_SCHEDULE } from "@/lib/seed-data";
+import { DEFAULT_SCHEDULE, STANDARD_BRING } from "@/lib/seed-data";
 
 export function HikingDay() {
   return (
@@ -43,13 +43,7 @@ export function HikingDay() {
             <Reveal delay={120} className="rounded-4xl border border-forest-900/10 bg-white p-6 sm:p-7">
               <p className="eyebrow text-forest-600">What to bring</p>
               <ul className="mt-4 space-y-3 text-sm text-forest-900/80">
-                {[
-                  "Comfortable hiking shoes or trainers",
-                  "At least 2 litres of water",
-                  "Sunscreen, a hat and a light jacket",
-                  "Breakfast, snacks and lunch",
-                  "A charged phone for the group photos",
-                ].map((item) => (
+                {STANDARD_BRING.map((item) => (
                   <li key={item} className="flex items-start gap-3">
                     <svg viewBox="0 0 16 16" className="mt-0.5 h-4 w-4 shrink-0 text-forest-600" fill="none" aria-hidden="true">
                       <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.3" />

@@ -156,3 +156,24 @@ begin
   return rec;
 end;
 $$;
+
+-- Public bucket for hike cover and gallery photos uploaded from admin.
+insert into storage.buckets (id, name, public)
+values ('hike-photos', 'hike-photos', true)
+on conflict (id) do update set public = true;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'storage'
+      and tablename = 'objects'
+      and policyname = 'Public read hike photos'
+  ) then
+    create policy "Public read hike photos"
+    on storage.objects
+    for select
+    using (bucket_id = 'hike-photos');
+  end if;
+end
+$$;

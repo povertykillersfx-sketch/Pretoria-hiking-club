@@ -12,14 +12,14 @@ import { communityStats, site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "About the Club",
   description:
-    "Pretoria Hiking Club is a community of 1,000+ hikers built around fitness, adventure, friendships and travel. All ages and experience levels are welcome.",
+    "Pretoria Hiking Club is a community of 1,000+ hikers built around fitness, adventure, friendships and travel. Hikers 16+ and all experience levels are welcome.",
   alternates: { canonical: "/about" },
 };
 
 const values = [
   {
     title: "Everyone is welcome",
-    copy: "First hike or hundredth, 18 or 68 — there is a route and a pace for you. Nobody is ever left at the back on their own.",
+    copy: "First hike or hundredth, 16 or 68 — there is a route and a pace for you. Nobody is ever left at the back on their own.",
   },
   {
     title: "Properly organised",
@@ -73,7 +73,7 @@ export default function AboutPage() {
                 </p>
                 <p>
                   <strong className="font-semibold text-forest-900">
-                    All ages and all experience levels are welcome.
+                    Hikers 16+ and all experience levels are welcome.
                   </strong>{" "}
                   If you can walk 5KM, you can hike with us. Bring a friend or
                   come alone — you will not stay a stranger for long.

@@ -24,7 +24,7 @@ export default async function NewEventPage() {
       </p>
 
       <div className="mt-10">
-        <EventForm library={getImageLibrary()} />
+        <EventForm library={await getImageLibrary()} />
       </div>
     </div>
   );
