@@ -21,7 +21,7 @@ const legalLinks = [
 
 const socialLinks = [
   { href: site.instagram, label: "Instagram" },
-  { href: site.whatsappGroup, label: "WhatsApp" },
+  { href: site.whatsapp, label: "WhatsApp" },
   { href: site.tiktok, label: "TikTok" },
 ];
 

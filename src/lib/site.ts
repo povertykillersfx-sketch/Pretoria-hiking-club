@@ -9,11 +9,12 @@ export const site = {
   email: "hello@pretoriahikingclub.co.za",
   bookingEmail: "booking@pretoriahikingclub.co.za",
   phone: "+27 67 986 2379",
-  whatsapp: "https://wa.me/27679862379",
+  whatsapp: "https://wa.me/message/NU6G7TGMPOEQC1",
   whatsappGroup: "https://chat.whatsapp.com/FyOOtXnCJQpJ588AGtUbKi",
-  instagram: "https://www.instagram.com/pretoria.hiking.c/",
+  instagram:
+    "https://instagram.com/pretoria.hiking.c?obrf=MTlqanF6d2VlYnF2eA%3D%3D&utm_source=qr",
   instagramHandle: "@pretoria.hiking.c",
-  tiktok: "https://www.tiktok.com/@pretoria.hiking.c",
+  tiktok: "https://www.tiktok.com/@pretoria.hiking.c?_r=1&_t=ZS-9AYUfmWcXQq",
   tiktokHandle: "@pretoria.hiking.c",
   city: "Pretoria, South Africa",
   bank: {
