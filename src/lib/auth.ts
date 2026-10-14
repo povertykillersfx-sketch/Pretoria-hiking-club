@@ -58,7 +58,3 @@ export async function isAuthenticated(): Promise<boolean> {
   const age = (Date.now() - Number(issuedAt)) / 1000;
   return Number.isFinite(age) && age >= 0 && age < MAX_AGE_SECONDS;
 }
-
-export function usingDefaultPassword(): boolean {
-  return !process.env.ADMIN_PASSWORD;
-}

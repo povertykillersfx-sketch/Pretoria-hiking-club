@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/admin/login-form";
 import { LogoMark } from "@/components/logo";
-import { isAuthenticated, usingDefaultPassword } from "@/lib/auth";
+import { isAuthenticated } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -18,13 +18,6 @@ export default async function AdminLoginPage() {
         </p>
 
         <LoginForm />
-
-        {usingDefaultPassword() && (
-          <p className="mt-6 rounded-2xl border border-forest-400/30 bg-forest-500/15 px-4 py-3 text-sm leading-relaxed text-white/80">
-            Demo password:{" "}
-            <strong className="font-mono text-white">trailboss</strong>
-          </p>
-        )}
       </div>
     </div>
   );

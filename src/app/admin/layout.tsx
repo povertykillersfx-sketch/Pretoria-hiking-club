@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { logout } from "@/app/actions/admin";
 import { LogoMark } from "@/components/logo";
-import { isAuthenticated, usingDefaultPassword } from "@/lib/auth";
+import { isAuthenticated } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Club admin",
@@ -64,13 +64,6 @@ export default async function AdminLayout({
               </form>
             </div>
           </div>
-
-          {usingDefaultPassword() && (
-            <p className="bg-ember px-5 py-2 text-center text-xs font-semibold text-ink sm:px-8">
-              Demo mode: set ADMIN_PASSWORD and ADMIN_SESSION_SECRET in your
-              environment before going live.
-            </p>
-          )}
         </header>
       )}
 

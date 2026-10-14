@@ -83,7 +83,7 @@ the app uses an in-memory store seeded with eight example events (including a
 sold-out one) and sample bookings — nothing is written to `.data` or the disk.
 
 The admin area is at [http://localhost:3000/admin](http://localhost:3000/admin).
-The development password is `trailboss` until you set `ADMIN_PASSWORD`.
+The admin password is `trailboss`.
 
 ```bash
 npm run build   # production build
@@ -99,7 +99,7 @@ optional in development.
 | Variable | Purpose |
 | --- | --- |
 | `NEXT_PUBLIC_SITE_URL` | Canonical URL used for metadata, sitemap and emails |
-| `ADMIN_PASSWORD` | Admin password. **Set this before going live.** |
+| `ADMIN_PASSWORD` | Admin password. Defaults to `trailboss`. |
 | `ADMIN_SESSION_SECRET` | Secret used to sign the admin session cookie |
 | `ADMIN_EMAIL` | Where new-booking notifications are sent |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE` | SMTP credentials for confirmation emails |
@@ -227,5 +227,6 @@ Node host.
 1. Create a Supabase project and run `supabase/schema.sql`.
 2. Set `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` on the host.
    Serverless platforms have no persistent disk — do not use SQLite or `.data`.
-3. Set `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET` and the SMTP variables before
-   opening bookings to the public.
+3. Set `ADMIN_SESSION_SECRET` and the SMTP variables before opening bookings to
+   the public. The admin password stays `trailboss` unless you override
+   `ADMIN_PASSWORD`.
