@@ -67,8 +67,7 @@ function seedState(): MemoryState {
       distance_10km: Boolean(event.row.distance_10km),
       difficulty: event.row.difficulty,
       price_cents: event.row.price_cents,
-      payment_link:
-        event.row.price_cents > 0 ? `https://pay.yoco.com/phc-${event.row.slug}` : null,
+      payment_link: null,
       capacity: event.row.capacity,
       image: event.row.image,
       gallery: parseSeedJson(event.row.gallery, [] as string[]),

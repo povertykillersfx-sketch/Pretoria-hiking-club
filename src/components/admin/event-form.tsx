@@ -257,7 +257,7 @@ export function EventForm({
 
         <Label
           title="Payment link"
-          hint="Yoco (or other) pay link for this event only"
+          hint="Optional fallback. Live Yoco Checkout uses the secret key on the host."
           error={errors.paymentLink}
         >
           <input
@@ -269,8 +269,8 @@ export function EventForm({
             inputMode="url"
           />
           <span className="mt-2 block text-xs leading-relaxed text-white/45">
-            Each hike needs its own link because prices differ. Required before
-            you publish a paid event. Leave blank for free events.
+            Leave blank to charge on Yoco Checkout (quantity × hike price). Only
+            needed as a fallback if Checkout is not configured.
           </span>
         </Label>
 

@@ -56,9 +56,16 @@ function SubmitButton({ total }: { total: string }) {
   );
 }
 
-export function BookingForm({ event }: { event: EventWithAvailability }) {
+export function BookingForm({
+  event,
+  cardCheckout = false,
+}: {
+  event: EventWithAvailability;
+  cardCheckout?: boolean;
+}) {
   const distances = availableDistances(event);
   const isPaid = event.priceCents > 0;
+  const canPayByCard = cardCheckout || Boolean(event.paymentLink);
 
   const [step, setStep] = useState(0);
   const [distance, setDistance] = useState<TrailDistance>(distances[0] ?? "5KM");
@@ -68,7 +75,7 @@ export function BookingForm({ event }: { event: EventWithAvailability }) {
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
-    isPaid ? (event.paymentLink ? "card" : "eft") : "free",
+    isPaid ? (canPayByCard ? "card" : "eft") : "free",
   );
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
@@ -330,7 +337,7 @@ export function BookingForm({ event }: { event: EventWithAvailability }) {
             <BookingTotal priceCents={event.priceCents} quantity={people} />
 
             <div className="space-y-4">
-              {event.paymentLink ? (
+              {canPayByCard ? (
                 <button
                   type="button"
                   onClick={() => setPaymentMethod("card")}
@@ -354,8 +361,8 @@ export function BookingForm({ event }: { event: EventWithAvailability }) {
                       paymentMethod === "card" ? "text-white/70" : "text-stone",
                     )}
                   >
-                    Your spot is held when you confirm. Pay the total on this
-                    hike&apos;s Yoco link with your booking reference.
+                    Your spot is held when you confirm. The next page opens a
+                    Yoco checkout for this booking&apos;s exact total.
                   </span>
                 </button>
               ) : null}
@@ -389,9 +396,12 @@ export function BookingForm({ event }: { event: EventWithAvailability }) {
               </button>
             </div>
 
-            {paymentMethod === "card" && event.paymentLink && (
-              <div className="rounded-3xl bg-sand/70 p-5">
-                <PaymentInstructions payLink={event.paymentLink} showEft={false} />
+            {paymentMethod === "card" && canPayByCard && (
+              <div className="rounded-3xl bg-sand/70 p-5 text-sm text-forest-900/80">
+                After you confirm, we open Yoco for{" "}
+                {formatPriceExact(computeBookingTotalCents(event.priceCents, people))}.
+                Do not use a shared pay.yoco.com link — each booking gets its own
+                checkout.
               </div>
             )}
 

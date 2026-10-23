@@ -6,8 +6,15 @@ import {
   extractBookingReference,
   hmacSecretBytes,
   isSuccessfulCharge,
+  usablePayLink,
   verifyYocoSignature,
 } from "./yoco";
+
+test("ignores placeholder pay.yoco.com/phc- seed links", () => {
+  assert.equal(usablePayLink("https://pay.yoco.com/phc-magaliesberg-sunrise-hike"), null);
+  assert.equal(usablePayLink("https://pay.yoco.com/club-hike"), "https://pay.yoco.com/club-hike");
+  assert.equal(usablePayLink(null), null);
+});
 
 test("multiplies ticket quantity by the hike price", () => {
   assert.equal(computeBookingTotalCents(15000, 3), 45000);

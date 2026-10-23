@@ -92,7 +92,11 @@ export async function submitBooking(
 
   revalidatePath("/events");
   revalidatePath("/");
-  redirect(`/booking/${reference}`);
+  redirect(
+    parsed.data.paymentMethod === "card"
+      ? `/booking/${reference}?pay=1`
+      : `/booking/${reference}`,
+  );
 }
 
 const contactSchema = z.object({

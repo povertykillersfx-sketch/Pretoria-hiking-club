@@ -13,6 +13,7 @@ import {
 } from "./memory-store";
 import { hydrateEvent, todayIso, type EventRecord } from "./records";
 import { getSupabase, throwSupabaseError, usingSupabase } from "./db";
+import { cardPaymentsEnabled } from "./yoco";
 import type { EventInput, EventWithAvailability } from "./types";
 
 export type { EventInput } from "./types";
@@ -172,7 +173,7 @@ export async function setPublished(
 ): Promise<{ ok: true } | { ok: false; reason: "payment_link" }> {
   if (published) {
     const event = await getEventById(id);
-    if (event && event.priceCents > 0 && !event.paymentLink) {
+    if (event && event.priceCents > 0 && !cardPaymentsEnabled(event.paymentLink)) {
       return { ok: false, reason: "payment_link" };
     }
   }

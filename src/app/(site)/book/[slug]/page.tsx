@@ -7,6 +7,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { getEventBySlug } from "@/lib/events";
 import { formatDate, formatPrice, spotsLabel, trailLabel } from "@/lib/format";
 import { site } from "@/lib/site";
+import { cardPaymentsEnabled } from "@/lib/yoco";
 
 export const dynamic = "force-dynamic";
 
@@ -86,7 +87,7 @@ export default async function BookEventPage({
 
         <div className="mt-10 grid gap-10 lg:grid-cols-[1.35fr_1fr] lg:gap-14">
           <div className="rounded-4xl border border-forest-900/10 bg-white p-6 shadow-[0_24px_60px_-48px_rgba(6,26,17,0.8)] sm:p-8">
-            <BookingForm event={event} />
+            <BookingForm event={event} cardCheckout={cardPaymentsEnabled(event.paymentLink)} />
           </div>
 
           <aside className="lg:sticky lg:top-28 lg:self-start">
