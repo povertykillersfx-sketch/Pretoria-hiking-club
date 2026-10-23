@@ -23,7 +23,7 @@ export default async function AdminEventsPage({
         <div>
           <h1 className="display text-4xl text-white sm:text-5xl">Events</h1>
           <p className="mt-3 text-white/60">
-            Create events, set capacity, prices and a payment link per hike.
+            Create events, set capacity, prices and optional per-hike payment links.
           </p>
         </div>
         <Link
@@ -36,7 +36,7 @@ export default async function AdminEventsPage({
 
       {error === "payment-link" && (
         <p className="mt-6 rounded-2xl border border-ember/40 bg-ember/10 px-5 py-3 text-sm font-semibold text-ember">
-          Add a payment link on the event before you publish a paid hike.
+          Paid hikes need a Yoco secret key on the host, or a payment link on the event.
         </p>
       )}
 

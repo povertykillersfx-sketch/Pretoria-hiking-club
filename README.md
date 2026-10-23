@@ -104,7 +104,7 @@ optional in development.
 | `ADMIN_EMAIL` | Where new-booking notifications are sent |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE` | SMTP credentials for confirmation emails |
 | `MAIL_FROM` | From address, e.g. `Pretoria Hiking Club <hello@…>` |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL. **Required on Netlify.** |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL. **Required on Vercel.** |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-side Supabase key used to insert bookings and QR tokens |
 | `YOCO_SECRET_KEY` | Yoco Checkout secret key (`sk_live_…`). Used to create per-booking checkouts |
 | `YOCO_WEBHOOK_SECRET` | Yoco webhook signing secret (`whsec_…`). Required to accept `/webhooks/payments` |
@@ -221,11 +221,18 @@ python3 brand-source/replace-photos.py
 
 ## Deploying
 
-Netlify (this repo includes `netlify.toml` and `@netlify/plugin-nextjs`) or any
-Node host.
+The GitHub repo is connected to Vercel (`edge-x/pretoria-hiking-club`). Next.js
+is detected automatically. Functions run in Cape Town (`cpt1`). Preview URL:
+
+https://pretoria-hiking-club.vercel.app
 
 1. Create a Supabase project and run `supabase/schema.sql`.
-2. Set `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` on the host.
-   Serverless platforms have no persistent disk — do not use SQLite or `.data`.
-3. Set `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET` and the SMTP variables before
-   opening bookings to the public.
+2. In the Vercel project, set the environment variables above for Production,
+   Preview and Development. Serverless platforms have no persistent disk — do
+   not use SQLite or `.data`.
+3. Add the custom domain `pretoriahikingclub.co.za` (and `www`) in Vercel, then
+   point DNS at Vercel from Host Africa. Vercel will show the exact records.
+4. Keep `ADMIN_PASSWORD` as `trailboss` unless you change it. Set
+   `ADMIN_SESSION_SECRET` and SMTP before opening bookings to the public.
+5. Register `https://pretoriahikingclub.co.za/webhooks/payments` in the Yoco
+   app once the domain is on Vercel.
