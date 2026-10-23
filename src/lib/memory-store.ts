@@ -111,9 +111,9 @@ function seedState(): MemoryState {
 
 function state(): MemoryState {
   if (!global.__phcMemory) {
-    if (process.env.NETLIFY) {
+    if (process.env.VERCEL || process.env.NETLIFY) {
       console.warn(
-        "[phc] Supabase is not configured. Bookings cannot persist on Netlify without NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
+        "[phc] Supabase is not configured. Bookings cannot persist on Vercel without NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
       );
     }
     global.__phcMemory = seedState();
