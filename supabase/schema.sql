@@ -1,6 +1,27 @@
 -- Pretoria Hiking Club — run this in the Supabase SQL editor once.
--- Bookings and QR check-in tokens live here so Netlify serverless functions
+-- Bookings and QR check-in tokens live here so Vercel serverless functions
 -- never write to a local disk.
+
+-- Replace a leftover empty bookings table from another app (uuid / ticket_code)
+-- so this schema can create the club bookings table.
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'bookings'
+      and column_name = 'ticket_code'
+  ) and not exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'bookings'
+      and column_name = 'reference'
+  ) then
+    drop table public.bookings cascade;
+  end if;
+end $$;
 
 create table if not exists public.events (
   id bigint generated always as identity primary key,
