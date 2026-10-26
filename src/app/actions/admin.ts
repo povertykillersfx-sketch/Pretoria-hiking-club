@@ -19,6 +19,7 @@ import {
   uniqueSlug,
   type EventInput,
 } from "@/lib/events";
+import { yocoSecretKey } from "@/lib/yoco";
 import { DEFAULT_SCHEDULE } from "@/lib/seed-data";
 import type { ScheduleItem } from "@/lib/types";
 
@@ -136,7 +137,7 @@ function parsePaymentLink(
   const raw = (value ?? "").trim();
 
   if (!raw) {
-    if (priceRands > 0 && published) {
+    if (priceRands > 0 && published && !yocoSecretKey()) {
       return { link: null, error: "Add a payment link for this hike before you publish it." };
     }
     return { link: null };

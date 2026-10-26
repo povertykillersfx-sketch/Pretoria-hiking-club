@@ -18,6 +18,18 @@ export function yocoSecretKey(): string | undefined {
   return value || undefined;
 }
 
+/** Fake seed links like https://pay.yoco.com/phc-slug 404 on Yoco. */
+export function usablePayLink(url: string | null | undefined): string | null {
+  const trimmed = url?.trim() ?? "";
+  if (!trimmed) return null;
+  if (/^https?:\/\/pay\.yoco\.com\/phc-/i.test(trimmed)) return null;
+  return trimmed;
+}
+
+export function cardPaymentsEnabled(paymentLink?: string | null): boolean {
+  return Boolean(yocoSecretKey()) || Boolean(usablePayLink(paymentLink));
+}
+
 export function yocoWebhookSecrets(): string[] {
   return [process.env.YOCO_WEBHOOK_SECRET, process.env.YOCO_SECRET_KEY]
     .map((value) => value?.trim())
@@ -186,7 +198,8 @@ export async function createYocoCheckout(
   const secret = yocoSecretKey();
   if (!secret || booking.amountCents <= 0) return null;
 
-  const bookingUrl = `${site.url}/booking/${booking.reference}`;
+  const origin = (process.env.NEXT_PUBLIC_SITE_URL ?? site.url).replace(/\/$/, "");
+  const bookingUrl = `${origin}/booking/${booking.reference}`;
   const response = await fetch(CHECKOUT_API, {
     method: "POST",
     headers: {

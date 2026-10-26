@@ -10,7 +10,8 @@ import { ArrowIcon, buttonClasses } from "@/components/ui/button";
 import { getBookingByReference, isQrUnlocked } from "@/lib/bookings";
 import { formatDate, formatPriceExact, trailLabel } from "@/lib/format";
 import { site, whatsappShareUrl } from "@/lib/site";
-import { createYocoCheckout } from "@/lib/yoco";
+import { StartYocoCheckout } from "@/components/booking/start-yoco-checkout";
+import { createYocoCheckout, usablePayLink } from "@/lib/yoco";
 
 export const dynamic = "force-dynamic";
 
@@ -21,10 +22,13 @@ export const metadata: Metadata = {
 
 export default async function BookingConfirmationPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ reference: string }>;
+  searchParams: Promise<{ pay?: string }>;
 }) {
   const { reference } = await params;
+  const { pay } = await searchParams;
   const booking = await getBookingByReference(reference);
 
   if (!booking) notFound();
@@ -155,10 +159,19 @@ export default async function BookingConfirmationPage({
                 <div className="mt-5">
                   <PaymentInstructions
                     reference={booking.reference}
-                    payLink={event.paymentLink}
+                    payLink={usablePayLink(event.paymentLink)}
                     checkoutUrl={checkoutUrl}
                     amountLabel={formatPriceExact(booking.amountCents)}
                   />
+                  {pay === "1" && checkoutUrl ? (
+                    <StartYocoCheckout url={checkoutUrl} />
+                  ) : null}
+                  {pay === "1" && !checkoutUrl && booking.paymentMethod === "card" ? (
+                    <p className="mt-3 text-sm font-semibold text-ember">
+                      Yoco checkout could not be opened. Use EFT below or WhatsApp
+                      us with reference {booking.reference}.
+                    </p>
+                  ) : null}
                 </div>
                 <p className="mt-4 text-sm text-forest-900/70">
                   Send proof of payment to {site.email} at least 48 hours before
