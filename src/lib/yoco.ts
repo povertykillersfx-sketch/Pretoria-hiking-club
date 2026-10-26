@@ -192,22 +192,14 @@ export function chargeAmountCents(payload: unknown): number | null {
   return typeof amount === "number" && Number.isFinite(amount) ? amount : null;
 }
 
-function checkoutReturnUrl(reference: string): string {
-  const configured = (process.env.NEXT_PUBLIC_SITE_URL ?? site.url).replace(/\/$/, "");
-  // Apex DNS still points at Host Africa, so send Yoco back to the live Vercel host.
-  if (/pretoriahikingclub\.co\.za$/i.test(new URL(configured).host)) {
-    return `https://pretoria-hiking-club.vercel.app/booking/${reference}`;
-  }
-  return `${configured}/booking/${reference}`;
-}
-
 export async function createYocoCheckout(
   booking: BookingWithEvent,
 ): Promise<string | null> {
   const secret = yocoSecretKey();
   if (!secret || booking.amountCents <= 0) return null;
 
-  const bookingUrl = checkoutReturnUrl(booking.reference);
+  const origin = (process.env.NEXT_PUBLIC_SITE_URL ?? site.url).replace(/\/$/, "");
+  const bookingUrl = `${origin}/booking/${booking.reference}`;
   const response = await fetch(CHECKOUT_API, {
     method: "POST",
     headers: {
