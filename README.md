@@ -103,7 +103,7 @@ optional in development.
 | `ADMIN_SESSION_SECRET` | Secret used to sign the admin session cookie |
 | `ADMIN_EMAIL` | Where new-booking notifications are sent |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE` | SMTP credentials for confirmation emails |
-| `MAIL_FROM` | From address, e.g. `Pretoria Hiking Club <hello@…>` |
+| `MAIL_FROM` | From address, e.g. `Pretoria Hiking Club <support@…>` |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL. **Required on Vercel.** |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-side Supabase key used to insert bookings and QR tokens |
 | `YOCO_SECRET_KEY` | Yoco Checkout secret key (`sk_live_…`). Used to create per-booking checkouts |
