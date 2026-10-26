@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "npx --yes tsx --test src/lib/yoco.test.ts"
+    "test": "npx --yes tsx --test src/lib/yoco.test.ts src/lib/image-type.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",

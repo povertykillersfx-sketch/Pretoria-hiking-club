@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { saveEvent, type EventFormState } from "@/app/actions/admin";
+import { prepareImageForUpload } from "@/components/admin/prepare-image-upload";
 import { cn } from "@/lib/cn";
 import { DEFAULT_SCHEDULE, STANDARD_BRING } from "@/lib/seed-data";
 import type { EventWithAvailability, ScheduleItem } from "@/lib/types";
@@ -86,10 +87,21 @@ export function EventForm({
     setUploadError(null);
 
     try {
+      const prepared = await prepareImageForUpload(file);
       const body = new FormData();
-      body.append("file", file);
+      body.append("file", prepared);
       const response = await fetch("/api/admin/upload", { method: "POST", body });
-      const data = (await response.json()) as { url?: string; error?: string };
+      let data: { url?: string; error?: string } = {};
+      try {
+        data = (await response.json()) as { url?: string; error?: string };
+      } catch {
+        data = {
+          error:
+            response.status === 413
+              ? "That photo is too large. Try another shot."
+              : "Upload failed. Try a smaller photo.",
+        };
+      }
 
       if (!response.ok || !data.url) {
         setUploadError(data.error ?? "Upload failed.");
@@ -102,8 +114,13 @@ export function EventForm({
       } else {
         setGallery((current) => [...current, data.url!]);
       }
-    } catch {
-      setUploadError("Upload failed. Check your connection and try again.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      setUploadError(
+        /failed to fetch|networkerror|load failed/i.test(message)
+          ? "Upload failed. Check your connection and try again."
+          : message || "Upload failed. Check your connection and try again.",
+      );
     } finally {
       setUploading(false);
     }
@@ -300,7 +317,8 @@ export function EventForm({
         <div>
           <p className="font-display text-sm font-bold tracking-tight text-white">Cover photo</p>
           <p className="mt-1 text-xs text-white/45">
-            Upload a cover from your phone or computer, or tap an existing photo below.
+            Upload a cover from your phone or computer, or tap an existing photo
+            below. Phone photos are shrunk automatically so they can upload.
           </p>
           <div className="mt-3 flex flex-wrap items-start gap-4">
             <div className="relative h-28 w-44 overflow-hidden rounded-2xl border border-white/15">
@@ -369,8 +387,10 @@ export function EventForm({
                 multiple
                 onChange={(changeEvent) => {
                   const files = Array.from(changeEvent.target.files ?? []);
-                  for (const file of files) void upload(file, "gallery");
                   changeEvent.target.value = "";
+                  void (async () => {
+                    for (const file of files) await upload(file, "gallery");
+                  })();
                 }}
               />
             </label>
